@@ -27,10 +27,7 @@
 using System;
 using System.Diagnostics;
 using GameFramework;
-using XLua;
-using UnityGameFramework.SDK;
 using UnityGameFramework.Runtime;
-using SFSLitJson;
 using System.Collections;
 using System.Text;
 
@@ -59,19 +56,6 @@ namespace GameFramework
             return true;
 #endif
             return false;
-        }
-        
-        public static void HandleLogSwitchWhenGameStart()
-        {
-            if (PlatformUtils.IsEditor() || IsCloseLog() == false)
-            {
-                SetLogEnabled(true);
-                UpdateLogSwitchState();
-            }
-            else
-            {
-                SetLogEnabled(false);
-            }
         }
 
         // 日志总开关, 现在只用这一个开关
@@ -201,42 +185,7 @@ namespace GameFramework
             _Log (LogLevel.Fatal, str);
         }
 
-        public static void LogMemory(string title)
-        {
-            var strMemory = Log.GetMemoryStatus(title);
-            SDKManager.Instance.CrashlyticsAddLog(strMemory);
-            PostEventLog.Record("memory", strMemory);
-        }
-
-        public static void LogCrashlytics(string title)
-        {
-            SDKManager.Instance.CrashlyticsAddLog(title);
-        }
-
-        private static string GetMemoryStatus(string prefix)
-        {
-            var memory = SDKManager.Instance.GetDataFromNative("PM_getMemoryStatus", "");
-            JsonData jsonData = JsonMapper.ToObject(memory);
-            if (jsonData == null)
-            {
-                return "Empty";
-            }
-            IDictionary dict = jsonData as IDictionary;
-            StringBuilder sBuilder = new StringBuilder();
-            foreach (var key in dict.Keys)
-            {
-                sBuilder.Append("|");
-                sBuilder.Append(key);
-                sBuilder.Append(":");
-                sBuilder.Append(dict[key]);
-            }
-
-            //lua部分
-            sBuilder.Append("|");
-            sBuilder.Append(LuaManager.Instance.GetLuaGarbage());
-            return $"{prefix} - {sBuilder.ToString()}";
-        }
-
+        
 
         private static long startSecond = 0;
         public static string GetDeltaSecond()

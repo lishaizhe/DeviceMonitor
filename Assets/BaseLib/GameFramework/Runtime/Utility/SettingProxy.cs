@@ -5,7 +5,6 @@ using GameFramework.Localization;
 using UnityEngine;
 using GameKit.Base;
 using UnityGameFramework.Runtime;
-using XLua;
 public class SettingProxy : Singleton<SettingProxy>
 {
     // private string _gameUid = "";
@@ -328,7 +327,7 @@ public class SettingProxy : Singleton<SettingProxy>
     
     public T GetPrivateObject<T>(string settingName)
     {
-        var ret = GameFramework.Utility.Json.ToObject<T>(PlayerPrefs.GetString(settingName + GameUid));
+        var ret = GameFramework.Utility.Json.ToObject<T>(PlayerPrefs.GetString(settingName + PrivateKey));
         if (ret != null)
             return ret;
         return System.Activator.CreateInstance<T>();

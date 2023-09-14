@@ -265,13 +265,13 @@ namespace UnityGameFramework.Runtime
         private void TickUpdate()
         {
             GameFrameworkEntry.Update(Time.deltaTime, Time.unscaledDeltaTime);
-
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN
-            if (SwitchScene.IsEnterFromStartScene && Input.GetKeyDown(KeyCode.LeftControl))
-            {
-                StartCoroutine(ExitGame());
-            }
-#endif
+//
+// #if UNITY_EDITOR || UNITY_STANDALONE_WIN
+//             if (SwitchScene.IsEnterFromStartScene && Input.GetKeyDown(KeyCode.LeftControl))
+//             {
+//                 StartCoroutine(ExitGame());
+//             }
+// #endif
         }
 
         private IEnumerator ExitGame()

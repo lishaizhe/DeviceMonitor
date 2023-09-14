@@ -70,20 +70,6 @@ namespace UnityGameFramework.Runtime
             }
         }
 
-        private static DebuggerComponent debugger = null;
-        public static DebuggerComponent Debugger
-        {
-            get
-            {
-                if(debugger==null)
-                {
-                    debugger= GetComponent<DebuggerComponent>();
-
-                }
-                return debugger;
-            }
-        }
-
         private static EventComponent m_event = null;
         public static EventComponent Event
         {
@@ -130,29 +116,29 @@ namespace UnityGameFramework.Runtime
         }
 
 
-        private static TimerComponent Timer_;
-        public static TimerComponent Timer
-        {
-            get
-            {
-                if (Timer_ == null)
-                {
-                    Timer_ = GetComponent<TimerComponent>();
-                }
-                return Timer_;
-
-            }
-        }
-        
-        static private GlobalDataProxy globalDataProxy;
-        public static GlobalDataProxy GlobalData
-        {
-            get
-            {
-
-                return GlobalDataProxy.Instance;
-            }
-        }
+        // private static TimerComponent Timer_;
+        // public static TimerComponent Timer
+        // {
+        //     get
+        //     {
+        //         if (Timer_ == null)
+        //         {
+        //             Timer_ = GetComponent<TimerComponent>();
+        //         }
+        //         return Timer_;
+        //
+        //     }
+        // }
+        //
+        // static private GlobalDataProxy globalDataProxy;
+        // public static GlobalDataProxy GlobalData
+        // {
+        //     get
+        //     {
+        //
+        //         return GlobalDataProxy.Instance;
+        //     }
+        // }
 
         /// <summary>
         /// 获取游戏框架组件。

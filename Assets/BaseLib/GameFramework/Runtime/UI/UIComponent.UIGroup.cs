@@ -21,7 +21,6 @@ namespace UnityGameFramework.Runtime
             [SerializeField]
             private int m_Depth = 0;
 
-            [SortingLayer]
             [SerializeField] private string sortingLayer = "Default";
 
             public string Name

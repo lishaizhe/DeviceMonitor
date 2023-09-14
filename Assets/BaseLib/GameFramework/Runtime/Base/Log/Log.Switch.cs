@@ -30,21 +30,6 @@ namespace GameFramework
 
         public static void UpdateLogSwitchState()
         {
-            m_isMessage = LogsViewManager.GetValue("m_isMessage1");
-            m_isFlatBuffer = LogsViewManager.GetValue("m_isFlatBuffer1");
-            m_isLoad = LogsViewManager.GetValue("m_isLoad1");
-            m_isDevice = LogsViewManager.GetValue("m_isDevice1");
-            m_isLua = LogsViewManager.GetValue("m_isLua1");
-            m_isFowViewer = LogsViewManager.GetValue("m_isFowViewer1");
-        
-            m_isMovie = LogsViewManager.GetValue("m_isMovie1");
-            m_isTask = LogsViewManager.GetValue("m_isTask1");
-            m_isGuide = LogsViewManager.GetValue("m_isGuide1");
-            m_isChat = LogsViewManager.GetValue("m_isChat1");
-            m_isMainScene = LogsViewManager.GetValue("m_isMainScene1");
-            m_isWorldScene = LogsViewManager.GetValue("m_isWorldScene1");
-            m_isRobot = LogsViewManager.GetValue("m_isRobot1");
-            m_isReleaseLog = LogsViewManager.GetValue("m_isReleaseLog1");
         }
 
         public static bool IsMessage()

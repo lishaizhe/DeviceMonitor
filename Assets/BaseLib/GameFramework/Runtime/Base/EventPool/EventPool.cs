@@ -207,12 +207,12 @@ namespace GameFramework
             }
             else if ((m_EventPoolMode & EventPoolMode.AllowMultiHandler) == 0)
             {
-                Log.Error("Event '{0} {1}' not allow multi handler.", id.ToString(), (EventId)id);
+                Log.Error("Event '{0}' not allow multi handler.", id.ToString());
                 return;
             }
             else if ((m_EventPoolMode & EventPoolMode.AllowDuplicateHandler) == 0 && Check(id, handler))
             {
-                Log.Error("Event '{0} {1}' not allow duplicate handler.", id.ToString(), (EventId)id);
+                Log.Error("Event '{0}' not allow duplicate handler.", id.ToString());
                 return;
             }
             else
@@ -341,12 +341,7 @@ namespace GameFramework
                 //handlers(sender, e);
                 m_DefaultHandler(sender, e);
             }
-
-            //为了保证C#的通知lua层也能接收到，所以这里调用下通知lua层的监听
-            if(e is CommonEventArgs args)
-            {
-                LuaManager.Instance.FireToLuaEvent((int)e.Id, args.UserData);
-            }
+            
             
             ReferencePool.Release(e.GetType(), e);
             if (handlers == null && (m_EventPoolMode & EventPoolMode.AllowNoHandler) == 0)
