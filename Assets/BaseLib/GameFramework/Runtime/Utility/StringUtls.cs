@@ -267,12 +267,7 @@ public static class StringUtils
     {
         return str?.Split(key);
     }
-
-    public static string GetTimerString(long l)
-    {
-        return GameEntry.Timer.SecondsToSecondString(l, ":");
-    }
-
+    
     public static string FormatStringMaxLength(string str, int maxLen = 18)
     {
         int strLen = str.Length;

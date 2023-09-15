@@ -1,783 +1,1176 @@
-﻿
-
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using AssetBundles;
-using UnityEngine;
-using UnityEngine.SceneManagement;
 using System.IO;
-using UnityEditor;
-using System.Text;
+using System.Linq;
 using GameFramework;
+using UnityEngine;
 using UnityEngine.U2D;
-using Object = UnityEngine.Object;
-using UnityGameFramework.Runtime;
-#if ODIN_INSPECTOR
-using Sirenix.OdinInspector;
-#endif
+using UnityEngine.UI;
+using VEngine;
 
-namespace GameKit.Base
-{
-    public enum MemeryHold
-    {
-        Normal, // 自己调用释放
-        Always, // 在关闭游戏的时候释放
-    }
-    public class ResourceManager : SingletonBehaviour<ResourceManager>
-    {
-        [System.Serializable]
-        public class AssetCache
-        {
-            public string assetName;            // AssetBundle中的资源名字
-            public string assetbundleName;      // AssetBundle的名字
-            public string assetbundleVariant;   // 实际加载的AssetBundle的变体的名字
-            public System.Type type;            // 资源类型
-            public MemeryHold hold;             // 内存持久类型
-            public int refCount;                // 被引用次数
-
-            public object obj;                  // 缓存中的资源对象
-
-            public void Release()
-            {
-                if (obj is GameObject prefab)
-                {
-                    prefab.RecycleAll();
-                    prefab.DestroyPooled();
-                }
-
-                obj = null;
-
-                if (!string.IsNullOrEmpty(assetbundleVariant))
-                    AssetBundleManager.UnloadAssetBundle(assetbundleVariant);
-            }
-        }
-
-        private const string AssetKeyFormat = "{0}@{1}@{2}";
-
-        private bool IsInited;               
-        private AssetBundleLoadManifestOperation m_AssetBundleLoadManifestOperation;    // Manifest读取进程
-
-        public delegate void OnLoadComplete(string key, object asset, string err);
-
-#if ODIN_INSPECTOR
-        [ShowInInspector, ShowIf("showOdinInfo")]
-#endif
-        public int RemoveAssetDelay
-        {
-            get;
-            //set;
-        } = 10;
-
-        #region release begin
-        // 资源释放结构体（自动释放和延迟释放共用）
-        // 自动释放指每次判断，如果数据为null自动删除
-        // 延迟释放指接口调用后几秒后删除
-        class ReleaseInfo
-        {
-            public string key;
-            public int delay;
-            public GameObject go;  // 这个地方必须是GameObject，需要依赖Unity的判空规则
-        }
-
-        // 资源释放结构体池（使用pool，否则gc太多）
-        private List<ReleaseInfo> m_releaseInfoPool = new List<ReleaseInfo>(50);
-     
-        // 延迟释放数组，设置一个桶装结构，这样可能会少遍历一些元素
-        private List<ReleaseInfo>[] m_DelayRemoveList = new List<ReleaseInfo>[10];
-        private int m_DelayTick = 0;
-        private float m_UpdateTick = 0;
-        #endregion
-
-        // 自动释放数组
-        private List<ReleaseInfo> m_autoRemoveList = new List<ReleaseInfo>(20);
-
-
-#if ODIN_INSPECTOR
-        [ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
-#endif
-        private List<AssetBundleLoadAssetOperation> m_InProgressOperations = new List<AssetBundleLoadAssetOperation>();
-#if ODIN_INSPECTOR
-        [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true)]
-#endif
-        private readonly Dictionary<string, List<System.Delegate>> m_CallbackStack = new Dictionary<string, List<System.Delegate>>();
-#if ODIN_INSPECTOR
-        [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.Foldout)]
-#endif
-        private readonly Dictionary<string, AssetCache> m_AssetCaches = new Dictionary<string, AssetCache>();
-
-   
-#if ODIN_INSPECTOR
-        [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true)]
-#endif
-        private readonly Dictionary<object, string> m_ObjectKeyMap = new Dictionary<object, string>();
-
-        private readonly List<string> m_CallbackTemp = new List<string>();
-
-
-        ResourceManager()
-        {
-            for (int i=0; i<m_DelayRemoveList.Length; ++i)
-            {
-                m_DelayRemoveList[i] = new List<ReleaseInfo>(20);
-            }
-        }
-
-        public override void Release()
-        {
-            base.Release();
-            UnloadUnusedAssets();
-        }
-
-        private static StringBuilder m_SB = new StringBuilder(256);
-        public static string AssetKeyLower(string assetBundle, string assetName, System.Type type)
-        {
-            if (string.IsNullOrEmpty(assetBundle))
-            {
-                GameFramework.Log.Error("AssetBundleName is Null");
-                return string.Empty;
-            }
-
-            assetBundle = assetBundle.ToLowerInvariant();
-
-            return m_SB.Clear().AppendFormat(AssetKeyFormat, assetName ?? "", assetBundle, type).ToString();
-        }
-        
-        public static void ParseAssetPath(string assetPath, bool isSingleBundle, out string assetName, out string assetBundle)
-        {
-            if (string.IsNullOrEmpty(assetPath))
-            {
-                assetName = "";
-                assetBundle = "";
-                return;
-            }
-
-            assetName = Path.GetFileNameWithoutExtension(assetPath);
-            int length = assetPath.LastIndexOf(isSingleBundle ? '.' : '/');
-            if (length != -1)
-                assetBundle = assetPath.Substring(0, length).ToLowerInvariant();
-            else
-                assetBundle = assetPath.ToLowerInvariant();
-        }
-
-
-        //新cg逻辑有个时序问题 太困了 先暂时糊一版
-        private bool StartInitialize = false;
-        public void Initialize(string localAssetBundlePath, string remoteAssetBundlePath, OnLoadComplete callback, AssetBundleManager.LoadMode loadMode = AssetBundleManager.LoadMode.Local, AssetBundleManager.LogMode logMode = AssetBundleManager.LogMode.JustErrors)
-        {
-            StartInitialize = true;
-            if (!AssetBundleManager.IsInited)
-            {
-
-                AssetBundleManager.loadMode = loadMode;
-                AssetBundleManager.logMode = logMode;
-
-                AssetBundleManager.SetLocalAssetBundleDirectory(localAssetBundlePath);
-                AssetBundleManager.SetRemoteAssetBundleURL(remoteAssetBundlePath);
-                RegistCallback(AssetBundles.Utility.GetPlatformName(), callback);
-                m_AssetBundleLoadManifestOperation = AssetBundleManager.Initialize();
-            }
-            else
-            {
-                StartCoroutine(_YieldCallback(callback));
-            }
-        }
-
-        private static WaitForEndOfFrame WaitFor = new WaitForEndOfFrame();
-        IEnumerator _YieldCallback(OnLoadComplete callback)
-        {
-            yield return WaitFor;
-            callback(AssetBundles.Utility.GetPlatformName(), AssetBundleManager.AssetBundleManifestObject, null);
-        }
-
-
-        /// <summary>
-        /// Loads the asset async.
-        /// </summary>
-        /// <param name="assetBundle">Asset bundle.</param>
-        /// <param name="assetName">Asset name.</param>
-        /// <param name="callback">Callback.</param>
-        /// <param name="memeryHold">Memery hold.</param>
-        /// <typeparam name="T">The 1st type parameter.</typeparam>
-        public void LoadAssetAsync<T>(string assetBundle, string assetName = null, OnLoadComplete callback = null, MemeryHold memeryHold = MemeryHold.Normal) where T : Object
-        {
-            LoadAssetAsync(assetBundle, assetName, typeof(T), callback,  memeryHold);
-        }
-
-        public string LoadAssetAsync<T>(string assetPath, OnLoadComplete callback = null, bool isSingleBundle = true) where T : Object
-        {
-            ParseAssetPath(assetPath, isSingleBundle, out string a, out string b);
-            return LoadAssetAsync(b, a, typeof(T), callback);
-        }
-        
-        public T LoadAssetSync<T>(string assetPath) where T : Object
-        {
-            ParseAssetPath(assetPath, true, out string assetName, out string assetBundle);
-            if (string.IsNullOrEmpty(assetBundle))
-            {
-                throw new Exception($"LoadAssetAsync {assetPath} assetBundle is null or empty!!!");
-            }
-
-            var type = typeof(T);
-            // 先获取缓存区
-            assetBundle = assetBundle.ToLowerInvariant();
-            string key = AssetKeyLower(assetBundle, assetName, type);
-            AssetCache cache = GenAssetCache(key, assetBundle, assetName, type, MemeryHold.Normal);
-            // 如果缓存区已经有资源直接回调
-            if (cache.obj != null)
-                return cache.obj as T;
-       
-            var obj = AssetBundleManager.LoadAssetSync(assetBundle, assetName, type);
-            if (obj != null)
-            {
-                AssetCache asset = CacheAsset(key, obj);
-            
 #if UNITY_EDITOR
-                // 如果是Editor中的Bundle模式的话，就需要在Editor中重置一下shader
-                if (!AssetBundleManager.SimulateAssetBundleInEditor)
-                { 
-                    GameObject go = asset.obj as GameObject;
-                    AssetBundleManager.resetEditorShader(go);
-                }
+using UnityEditor;
 #endif
 
-                asset.assetbundleVariant = AssetBundleManager.RemapVariantName(assetBundle);
+//
+// 资源管理
+//
+public class ResourceManager
+{
+    private const string package_name_gptest = "com.readygo.lm.gptest";
+    private const string package_name_channel = "com.readygo.aps.channel";
+    private const string package_name_gp = "com.readygo.lm.gp";
+    private const string debugDownloadURL_ = "http://10.7.88.21:84/gameservice/get3dfile.php?file=";
+    private const string onlineDownloadURL_ = "https://cdn-lm.readygo.tech/hotupdate/";
+    
+    private const string debugCheckVersionURL_ = "http://10.7.88.21:84/gameservice/getlsu3dversion.php?packageName={0}&platform={1}&appVersion={2}&gm={3}&server={4}&uid={5}&deivceId={6}&returnJson=1";
+    private const string onlineCheckVersionURL_ = "http://gsl-lm.readygo.tech/gameservice/getlsu3dversion.php?packageName={0}&platform={1}&appVersion={2}&gm={3}&server={4}&uid={5}&deivceId={6}&returnJson=1";
+
+    public readonly string GameResManifestName = "gameres";
+    public readonly string DataTableManifestName = "datatable";
+    public readonly string LuaManifestName = "lua";
+
+    private string[] manifests;
+    private string bkgroundManifest;
+    private string packageResManifest;
+    private float lastTimePerSecondUpdate;
+    private DownloadUpdateBkground _updateBkground;
+
+    //这个是为了缓存pvelevel和pvelevel_download交换目录导致的新路径的
+    private Dictionary<string, string> swapPrefabPathCache = new Dictionary<string, string>();
+    
+    
+    public enum PreloadType { Cache, KeepAlive }
+
+    public class PreloadCache
+    {
+        private xasset.Asset _asset;
+        public VEngine.Asset asset;
+        public float expiredTime;
+    }
+
+    private const float CacheTime = 300.0f;
+    private Dictionary<string, PreloadCache> preloadCache = new Dictionary<string, PreloadCache>();
+    private List<string> keysRemove = new List<string>();
+
+    public bool Loggable
+    {
+        get { return VEngine.Logger.Loggable;}
+        set { VEngine.Logger.Loggable = value; }
+    }
+
+    public void Initialize(Action<bool> onComplete)
+    {
+        swapPrefabPathCache.Clear();
+        var operation = VEngine.Versions.InitializeAsync();
+        operation.completed += delegate
+        {
+            if (operation.status == VEngine.OperationStatus.Failed)
+            {
+                Log.Error(operation.error);
+            }
+
+            onComplete?.Invoke(operation.status == VEngine.OperationStatus.Success);
+        };
+        
+        manifests = operation.manifests.ToArray();
+        bkgroundManifest = operation.bkgroundManifest;
+        packageResManifest = operation.packageResManifest;
+        
+#if SKIP_UPDATE
+        VEngine.Versions.SkipUpdate = true;
+#endif
+        Log.Info(">>>SkipUpdate {0}", VEngine.Versions.SkipUpdate);
+        VEngine.Versions.DownloadURL = DownloadURL;
+        VEngine.Versions.getDownloadURL = GetDownloadURL;
+        
+        SpriteAtlasManager.atlasRegistered += OnAtlasRegistered;
+        SpriteAtlasManager.atlasRequested += OnAtlasRequested;
+    }
+
+    private string GetDownloadURL(string filename)
+    {
+        var platformPath = VEngine.Versions.PlatformName;
+        string package_name = GameEntry.Sdk.GetPackageName();
+        if (package_name.Equals(package_name_channel) || package_name.Equals(package_name_gptest))
+            package_name = package_name_gp;
+        return $"{DownloadURL}{package_name}/{platformPath}/{filename}";
+    }
+
+    public string[] GetManifestNames()
+    {
+        return manifests;
+    }
+
+    public string GetBkgroundManifestName()
+    {
+        return bkgroundManifest;
+    }
+
+    public string GetPackageResManifestName()
+    {
+        return packageResManifest;
+    }
+
+    public string GetTempDownloadPath(string file)
+    {
+        var ret = $"{Application.temporaryCachePath}/Download/{file}";
+        var dir = Path.GetDirectoryName(ret);
+        if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+        {
+            Directory.CreateDirectory(dir);
+        }
+
+        return ret;
+    }
+    public string GetDownloadDataRootPath()
+    {
+        return VEngine.Versions.DownloadDataPath;
+    }
+    
+    
+    public void OverrideManifest(VEngine.Manifest manifest)
+    {
+        if (VEngine.Versions.SkipUpdate)
+            return;
+        
+        var from = GetTempDownloadPath(manifest.name);
+        var dest = VEngine.Versions.GetDownloadDataPath(manifest.name);
+        if (File.Exists(from))
+        {
+            Log.Debug("Copy {0} to {1}.", from, dest);
+            File.Copy(from, dest, true);
+        }
+        var versionName = VEngine.Manifest.GetVersionFile(manifest.name);
+        from = GetTempDownloadPath(versionName);
+        if (File.Exists(from))
+        {
+            var path = VEngine.Versions.GetDownloadDataPath(versionName);
+            Log.Debug("Copy {0} to {1}.", from, path);
+            File.Copy(from, path, true);
+        }
+        if (!VEngine.Versions.IsChanged(manifest.name))
+        {
+            Log.Debug("OverrideManifest no changed! {0}", manifest.name);
+            return;
+        }
+        manifest.Load(dest);
+        Log.Debug($"Load manifest {dest} {manifest.version}");
+        VEngine.Versions.Override(manifest);
+    }
+    
+    //
+    // 更新所有 Manifest
+    //
+    public VEngine.UpdateVersions UpdateManifests()
+    {
+        return VEngine.Versions.UpdateAsync(manifests);
+    }
+
+    //
+    // 获取更新文件总大小
+    //
+    public ulong GetDownloadSize(DownloadType downloadType, List<VEngine.Manifest> manifests, List<VEngine.DownloadInfo> downloadInfos)
+    {
+        if (VEngine.Versions.SkipUpdate || manifests == null || manifests.Count == 0)
+            return 0;
+        var debugStr = string.Join(",", manifests.Select(x => x.name.ToString()).ToArray());
+        Debug.Log("#bundle# GetDownloadSize manifests:" + debugStr);
+        ulong totalSize = 0;
+        downloadInfos.Clear();
+        var bundles = VEngine.Versions.GetBundlesWithGroups(manifests.ToArray(), null);
+        foreach (var bundle in bundles)
+        {
+            //过滤非本下载类型的资源
+            if (downloadType == DownloadType.Normal)
+            {
+                if (bundle.resMode == (int) ResMode.Download || bundle.resMode == (int) ResMode.RequestDownload)
+                    continue;
+            }else if (downloadType == DownloadType.BackGround)
+                if (bundle.resMode == (int) ResMode.Normal || bundle.resMode == (int) ResMode.LoadingDownload)
+                    continue;
+
+            var savePath = VEngine.Versions.GetDownloadDataPath(bundle.name);
+            
+            if (!VEngine.Versions.IsDownloaded(bundle))
+            {
+                if (!downloadInfos.Exists(downloadInfo => downloadInfo.savePath == savePath))
+                {
+                    totalSize += bundle.size;
+                    downloadInfos.Add(new VEngine.DownloadInfo
+                    {
+                        crc = bundle.crc,
+                        url = VEngine.Versions.GetDownloadURL(bundle.name),
+                        size = bundle.size,
+                        savePath = savePath,
+                        resMode = bundle.resMode,
+                    });
+                    Debug.Log($"#bundle# GetDownloadSize add to downloadInfos! bundle.name:{bundle.name}, size:{bundle.size/1024}K");
+                }
+                else
+                {
+                    Debug.Log($"#bundle# GetDownloadSize already exist in downloadInfos! bundle.name:{bundle.name}");
+                }
             }
             else
             {
-                cache.assetbundleVariant = AssetBundleManager.RemapVariantName(assetBundle);
-                RemoveCachedAsset(key);
+                Debug.Log($"#bundle# GetDownloadSize [2] already in GetDownloadDataPath! bundle.name:{bundle.name}");
             }
-
-            return obj as T;
         }
+        
+        return totalSize;
+    }
 
-      
-        /**
-         * 加载assetBundle资源
-         * 注意：如果memeryHold 是 MemeryHold.Normal的情况 LoadAssetAsync 后一定要调用卸载函数以保证引用计数正确
-         */
-        private string LoadAssetAsync(string assetBundle, string assetName, System.Type type, OnLoadComplete callback = null,  MemeryHold memeryHold = MemeryHold.Normal)
+    /// <summary>
+    /// 获取资源对应的bundle相关信息
+    /// </summary>
+    /// <param name="assetPath">资源路径</param>
+    /// <param name="needDownloadBundleInfos">需要下载的bundle</param>
+    /// <param name="totalSize">资源及依赖总大小</param>
+    /// <param name="needDownloadSize">剩余需要下载的大小</param>
+    /// <returns>资源是否存在</returns>
+    public bool GetBundleInfosOfAsset(string assetPath, List<BundleInfo>needDownloadBundleInfos, out ulong totalSize, out ulong needDownloadSize)
+    {
+        totalSize = 0;
+        needDownloadSize = 0;
+        
+        if (!Versions.GetDependencies(assetPath, out var curBundle, out var deps))
         {
-            if (string.IsNullOrEmpty(assetBundle))
-            {
-                throw new Exception($"LoadAssetAsync {assetName} assetBundle is null or empty!!!");
-            }
-
-            // 先获取缓存区
-            assetBundle = assetBundle.ToLowerInvariant();
-            string key = AssetKeyLower(assetBundle, assetName, type);
-            AssetCache cache = GenAssetCache(key, assetBundle, assetName, type, memeryHold);
-
-            // 判断是否正在Loading
-            if (IsInLoading(key))
-            {
-                // 如果同一个资源已经在Loading，不用再新开加载,注册callBack等待回调就可以了
-                RegistCallback(key, callback);
-                return key;
-            }
-
-            // 如果缓存区已经有资源直接回调
-            if (cache.obj != null)
-            {
-                callback?.Invoke(key, cache.obj, null);
-                return key;
-            }
-
-            // 注册回调
-            RegistCallback(key, callback);
-            AssetBundleLoadAssetOperation ao = AssetBundleManager.LoadAssetAsync(assetBundle, assetName, type);
-            if (ao != null)
-                m_InProgressOperations.Add(ao);
-
-            return key;
+            return false;
         }
+
+        var totalBundleInfos = deps.ToList();
+        totalBundleInfos.Insert(0, curBundle);
+
+        foreach (var bundle in totalBundleInfos)
+        {
+            var savePath = Versions.GetDownloadDataPath(bundle.name);
+            totalSize += bundle.size;
+            if (!Versions.IsDownloaded(bundle))
+            {
+                needDownloadBundleInfos.Add(bundle);
+                needDownloadSize += bundle.size;
+            }
+        }
+        
+        return true;
+    }
 
     
-
-        public void UnloadAssetWithObject(object obj, bool immediately = false)
+    /// <summary>
+    /// 检查资源是否下载完成 并返回剩余需要下载的大小
+    /// </summary>
+    /// <param name="assetPath">资源路径</param>
+    /// <param name="size">剩余需要下载的大小</param>
+    /// <returns>资源是否存在</returns>
+    public bool GetNeedDownloadSize(string assetPath, out ulong size)
+    {
+        size = 0;
+        //如果资源及其依赖已经下载完 直接返回
+        if (IsAssetDownloaded(assetPath))
         {
-            if (obj == null)
-                return;
-
-            if (m_ObjectKeyMap.TryGetValue(obj, out string key))
-                UnloadAssetWithKey(key, immediately);
+            return true;
+        }
+        
+        if (!Versions.GetDependencies(assetPath, out var curBundle, out var deps))
+        {
+            return false;
         }
 
-        /// <summary>
-        /// Unloads the asset.
-        /// </summary>
-        /// <param name="key">Key.</param>
-        public void UnloadAssetWithKey(string key, bool immediately = false)
+        if (!Versions.IsDownloaded(curBundle))
         {
-            if (string.IsNullOrEmpty(key))
-            {
-                Log.Error("UnloadAssetWithKey:key is null");
-                return;
-            }
-
-            if (m_AssetCaches.TryGetValue(key, out AssetCache cache))
-            {
-                cache.refCount--;
-                cache.refCount = Mathf.Clamp(cache.refCount, 0, cache.refCount);
-            }
-
-            if (cache == null || cache.refCount != 0 || cache.hold == MemeryHold.Always) 
-                return;
-            if (applicationIsQuitting || immediately)
-                RemoveCachedAsset(key);
-            else
-                RemoveCachedAssetDelay(key, RemoveAssetDelay);
+            size += curBundle.size;
         }
-
-        /// <summary>
-        /// Unloads the unused assets.
-        /// </summary>
-        public void UnloadUnusedAssets(MemeryHold hold = MemeryHold.Normal)
+        
+        foreach (var bundle in deps)
         {
-            List<string> tempList = new List<string>();
-            Dictionary<string, AssetCache>.Enumerator e = m_AssetCaches.GetEnumerator();
-            while (e.MoveNext())
+            if (!Versions.IsDownloaded(bundle))
             {
-                if (e.Current.Value.hold <= hold && e.Current.Value.refCount == 0)
-                {
-                    tempList.Add(e.Current.Key);
-                }
-            }
-            for (int i = 0; i < tempList.Count; ++i)
-            {
-                // 立即移除
-                RemoveCachedAsset(tempList[i]);
-            }
-            tempList.Clear();
-            e.Dispose();
-            System.GC.Collect();
-        }
-
-
-        public void StopAllLoadingProgress()
-        {
-            AssetBundleLoadAssetOperation operation = null;
-            for (int i = 0; i < m_InProgressOperations.Count; i++)
-            {
-                operation = m_InProgressOperations[i];
-                string key = AssetKeyLower(operation.AssetBundleName, operation.AssetName, operation.type);
-                UnregistCallback(key);
+                size += bundle.size;
             }
         }
 
-        protected override void OnUpdate(float delta)
+        return true;
+    }
+
+    /// <summary>
+    /// 以最高优先级进行下载
+    /// </summary>
+    /// <param name="downloadBundleList"></param>
+    /// <returns></returns>
+    public DownloadVersions StartHighestPriorityDownload(List<BundleInfo> downloadBundleList)
+    {
+        var downloadGroups = new Dictionary<string, DownloadInfo>(downloadBundleList.Count);
+        foreach (var bundle in downloadBundleList)
         {
-            if(!StartInitialize) return;
+            var savePath = Versions.GetDownloadDataPath(bundle.name);
+            if (downloadGroups.ContainsKey(savePath))
+            {
+                continue;
+            }
             
-            base.OnUpdate(delta);
+            if(Versions.IsDownloaded(bundle))
+                continue;
 
-            if (!IsInited)
+            var downloadInfo = new DownloadInfo
             {
-                // 等AssetBundleManifest初始化完成，再继续更新其他Operation
-#if UNITY_EDITOR
-                if (AssetBundleManager.SimulateAssetBundleInEditor)
-                {
-                    IsInited = true;
-                    Callback(AssetBundles.Utility.GetPlatformName());
-                }
-                else
-#endif
-                {
-                    if (m_AssetBundleLoadManifestOperation != null && m_AssetBundleLoadManifestOperation.IsDone())
-                    {
-                        IsInited = true;
-                        Callback(AssetBundles.Utility.GetPlatformName(), m_AssetBundleLoadManifestOperation.GetAsset<AssetBundleManifest>(), m_AssetBundleLoadManifestOperation.Error);
-                        m_AssetBundleLoadManifestOperation = null;
-                    }
-                }
-            }
-            else
-            {
-                UpdateLoadAssets();
-
-                m_UpdateTick += delta;
-                if (m_UpdateTick > 1)
-                {
-                    m_UpdateTick -= 1;
-                    // 这里强制处理一下，不用追帧了，因为没啥大碍。
-                    if (m_UpdateTick > 1)
-                    {
-                        m_UpdateTick = 0;
-                    }
-                    ++m_DelayTick;
-
-                    UpdateAutoRelease2();
-                    UpdateDelayRelease();
-                }
-
-            }
-        }
-
-        private void UpdateLoadAssets()
-        {
-            AssetBundleLoadAssetOperation operation = null;
-            for (int i = 0; i < m_InProgressOperations.Count;)
-            {
-                operation = m_InProgressOperations[i];
-                if (operation.IsDone())
-                {
-                    // 如果完成直接移除，避免后面回调方法中上层逻辑错误导致不停Update
-                    m_InProgressOperations.RemoveAt(i);
-                    string key = AssetKeyLower(operation.AssetBundleName, operation.AssetName, operation.type);
-
-                    // 读取所有Assets或者指定Asset
-                    object obj;
-                    if (string.IsNullOrEmpty(operation.AssetName))
-                    {
-                        obj = operation.GetAllAssets();
-                    }
-                    else
-                    {
-                        obj = operation.GetAsset();
-                    }
-
-                    if (obj != null)
-                    {
-                        if (string.IsNullOrEmpty(operation.Error) == false)
-                            Log.Info("Load Assets {0} has error {1}", operation.AssetName, operation.Error);
-                       
-                        // 将obj和key进行缓存
-                        AssetCache asset = CacheAsset(key, obj);
-                        if (asset != null)
-                        {
-#if UNITY_EDITOR
-                            // 如果是Editor中的Bundle模式的话，就需要在Editor中重置一下shader
-                            if (!AssetBundleManager.SimulateAssetBundleInEditor)
-                            { 
-                                GameObject go = asset.obj as GameObject;
-                                AssetBundleManager.resetEditorShader(go);
-                            }
-#endif
-
-                            asset.assetbundleVariant = operation.assetBundleVariant;
-                            m_CallbackTemp.Add(key);
-                        }
-                        else
-                        {
-                            AssetBundleManager.UnloadAssetBundle(operation.assetBundleVariant);
-                            string warningStr = $"{key} : assetCache had removed!";
-                            Log.Warning(warningStr);
-                            Callback(key, null, warningStr);
-                        }
-                    }
-                    else
-                    {
-                        if (m_AssetCaches.TryGetValue(key, out AssetCache cache))
-                        {
-                            cache.assetbundleVariant = operation.assetBundleVariant;
-                        }
-
-                        RemoveCachedAsset(key);
-
-                        string err = $"Load {operation.AssetBundleName} error, because {operation.Error}.";
-                        Log.Error(err);
-                        Callback(key, null, err);
-                    }
-                }
-                else
-                {
-                    i++;
-                }
-            }
-
-            while (m_CallbackTemp.Count > 0)
-            {
-                string key = m_CallbackTemp[0];
-
-                if (m_AssetCaches.TryGetValue(key, out AssetCache cache))
-                {
-                    if (cache != null && cache.obj != null)
-                    {
-                        Callback(key, cache.obj, string.Empty);
-                    }
-                    else
-                    {
-                        Log.Error("{0} is Null", key);
-                    }
-                }
-
-                m_CallbackTemp.RemoveAt(0);
-            }
-        }
-
-        private void Callback(string key, object t = null, string err = null)
-        {
-            if (m_CallbackStack.TryGetValue(key, out List<System.Delegate> callbackList))
-            {
-                m_CallbackStack.Remove(key);
-                foreach (OnLoadComplete callback in callbackList)
-                {
-                    try
-                    {
-                        callback?.Invoke(key, t, err);
-                    }
-                    catch (System.Exception e)
-                    {
-                        Log.Error($"{key} : {e}");
-                    }
-                }
-            }
-            else
-            {
-                RemoveCachedAsset(key);
-            }
-        }
-
-        /**
-         * 注册回调，等待加载ab包完成就行了，
-         * 注意这里不用判断m_CallbackStack[key].Contain(callback),
-         * 保证调用几次LoadAssetAsync 就回调几次，为什么呢？因为LoadAssetAsync会增加引用计数，有人要是在callBack里释放资源的话，
-         * LoadAssetAsync的多次调用就会导致资源释放不掉
-         */
-        private void RegistCallback(string key, System.Delegate callback)
-        {
-            if (callback != null && !string.IsNullOrEmpty(key))
-            {
-                if (!m_CallbackStack.ContainsKey(key))
-                    m_CallbackStack.Add(key, new List<System.Delegate>());
-             
-                m_CallbackStack[key].Add(callback);
-            }
-        }
-
-        private void UnregistCallback(string key)
-        {
-            if (m_CallbackStack.TryGetValue(key, out List<System.Delegate> callbackList))
-            {
-                m_CallbackStack.Remove(key);
-
-                foreach (OnLoadComplete callback in callbackList)
-                {
-                    try
-                    {
-                        callback?.Invoke(key, null, string.Empty);
-                    }
-                    catch (System.Exception e)
-                    {
-                        Log.Error($"{key} : {e}");
-                    }
-                }
-            }
-        }
-
-        private bool IsInLoading(string key)
-        {
-            return m_CallbackStack.ContainsKey(key);
-        }
-
-        private void RemoveCachedAssetDelay(string key, int delay)
-        {
-            ReleaseInfo info = GetReleaseInfo();
-            info.key = key;
-            info.delay = m_DelayTick + delay + 1;
-
-            if (m_DelayRemoveList.Length == 0)
-            {
-                Log.Error("DelayRemoveList length = 0!");
-                return;
-            }
-
-            // 添加到相应的slot桶里
-            int slot = info.delay % m_DelayRemoveList.Length;
-            m_DelayRemoveList[slot].Add(info);
-        }
-
-
-        private void RemoveCachedAsset(string key,bool force = true)
-        {
-            if (m_AssetCaches.TryGetValue(key, out AssetCache cache))
-            {
-                //非强制删除的话就根据引用计数来判断是否释放
-                if (!force && cache.refCount > 0)
-                    return;
-                if (cache.type == typeof(SpriteAtlas))
-                {
-                    AtlasUtils.ClearCacheSprite(cache.assetName);
-                }
-                
-                if (cache.obj != null)
-                {
-                    m_ObjectKeyMap.Remove(cache.obj);
-                }
-                cache.Release();
-                m_AssetCaches.Remove(key);
-            }
-        }
-
-
-        private AssetCache CacheAsset(string key, object obj)
-        {
-            if (m_AssetCaches.TryGetValue(key, out AssetCache cache))
-            {
-                cache.obj = obj;
-                if (!m_ObjectKeyMap.ContainsKey(obj))
-                    m_ObjectKeyMap.Add(obj, key);
-            }
-            else
-            {
-                Log.Warning("There is no asset cache with key : {0}, so {1} can not be cached.", key, ((Object)obj).name);
-            }
-
-            return cache;
-        }
-
-        private AssetCache GenAssetCache(string key, string assetBundle, string assetName, System.Type type, MemeryHold hold)
-        {
-            if (m_AssetCaches.TryGetValue(key, out var cache))
-            {
-                Debug.Assert(assetBundle == cache.assetbundleName && assetName == cache.assetName && type == cache.type, "Cached Asset is not same.");
-
-                if (cache.hold < hold)
-                    cache.hold = hold;
-
-                cache.refCount++;
-                return cache;
-            }
-          
-            cache = new AssetCache
-            {
-                assetName = assetName,
-                assetbundleName = assetBundle,
-                type = type,
-                hold = hold,
-                refCount =  1,
+                crc = bundle.crc,
+                url = Versions.GetDownloadURL(bundle.name),
+                size = bundle.size,
+                savePath = savePath,
+                resMode = bundle.resMode,
             };
-
-            m_AssetCaches.Add(key, cache);
-            return cache;
+            
+            downloadGroups.Add(savePath, downloadInfo);
         }
 
-     
+        var downloadVersion = Versions.DownloadAsync(downloadGroups.Values.ToArray(), true);
+        return downloadVersion;
+    }
 
-        /// <summary>
-        /// 异步加载GameObject方法，GameObject无需释放，直接Destroy或者Recycle
-        /// </summary>
-        public void LoadGameObjectAsync(string assetPath, System.Action<GameObject> callback, bool isSingleBundle = true)
+    
+    
+    //
+    // 下载所有更新
+    //
+    public VEngine.DownloadVersions DownloadUpdates(List<VEngine.DownloadInfo> downloadInfos)
+    {
+        var debugStr = string.Join(",", downloadInfos.Select(x => x.savePath.ToString()).ToArray());
+        Debug.Log("#bundle# DownloadUpdates downloadInfos:" + debugStr);
+        return VEngine.Versions.DownloadAsync(downloadInfos.ToArray());
+    }
+
+    public void StartBkgroundDownload_Lua()
+    {
+        List<string> tmp = new List<string> { "gameres" };
+        StartBkgroundDownload(tmp);
+    }
+
+    //设置后台最大下载数
+    public void SetBkgroundDownloadThread(uint thread_count)
+    {
+        Download.MaxDownloads = thread_count;
+    }
+
+    public void StartBkgroundDownload(List<string> manifestNames)
+    {
+        var manifests = new List<VEngine.Manifest>();
+        foreach (var n in manifestNames)
         {
-            ParseAssetPath(assetPath, isSingleBundle, out string assetName, out string assetBundle);
-            LoadAssetAsync<GameObject>(assetBundle, assetName, (key, asset, err) =>
+            var m = VEngine.Versions.GetManifest(n);
+            manifests.Add(m);
+        }
+        var downloadInfos = new List<VEngine.DownloadInfo>();
+        var totalSize = GetDownloadSize(DownloadType.BackGround, manifests, downloadInfos);
+        if (totalSize > 0)
+        {
+            _updateBkground = new DownloadUpdateBkground {manifests = new List<VEngine.Manifest>(manifests)};
+            _updateBkground.Start(downloadInfos);
+            Log.Debug("start bkground download {0}", totalSize);
+        }
+    }
+    
+    public void BeginWhiteListCheck()
+    {
+        VEngine.Versions.CheckWhiteList = true;
+    }
+
+    public bool EndWhiteListCheck()
+    {
+        VEngine.Versions.CheckWhiteList = false;
+        if (VEngine.Versions.WhiteListFailed.Count > 0)
+        {
+            foreach (var i in VEngine.Versions.WhiteListFailed)
             {
-                if (asset is GameObject prefab)
+                Log.Info("whitelist failed: {0}", i);
+            }
+        }
+        return VEngine.Versions.WhiteListFailed.Count == 0;
+    }
+    
+    // now表示是否立即停止，一般在结束游戏的时候用
+    public void Clear(bool now = false)
+    {
+        Log.Debug("ResourceManager:Clear");
+        
+        foreach (var i in preloadCache)
+        {
+            i.Value.asset.Release();
+        }
+        preloadCache.Clear();
+
+        ClearInstance();
+        
+        objectPoolMgr.ClearAllPool(now);
+        VEngine.Loadable.ClearAll();
+        UnloadUnusedAssets();
+    }
+
+    //
+    // 加载资源
+    //
+    public VEngine.Asset LoadAsset(string path, Type type)
+    {
+        return VEngine.Asset.Load(path, type);
+    }
+
+    public VEngine.Asset LoadAssetAsync(string path, Type type)
+    {
+        return VEngine.Asset.LoadAsync(path, type);
+    }
+    
+    public VEngine.Asset LoadAllAssetsAsync(string bundle_path, Action<VEngine.Asset> completed = null)
+    {
+        return VEngine.Asset.LoadAllAssetsAsync(bundle_path, completed);
+    }
+
+    public void PreloadAsset(string path, Type type, PreloadType preloadType = PreloadType.Cache)
+    {
+        var expiredTime = preloadType == PreloadType.Cache ? Time.realtimeSinceStartup + CacheTime : float.MaxValue;
+        if (preloadCache.TryGetValue(path, out var cache))
+        {
+            cache.expiredTime = expiredTime;
+        }
+        else
+        {
+            var asset = VEngine.Asset.LoadAsync(path, type);
+            preloadCache.Add(path, new PreloadCache {asset = asset, expiredTime = expiredTime});
+        }
+    }
+
+    //
+    // 卸载资源
+    //
+    public void UnloadAsset(VEngine.Asset asset)
+    {
+        if (asset != null)
+        {
+            asset.Release();
+        }
+    }
+
+    // 资源清单中是否有该资源
+    public bool HasAsset(string path)
+    {
+        var tempPath = path;
+        VEngine.AssetInfo asset;
+        return VEngine.Versions.GetAsset(ref tempPath, out asset);
+        //return VEngine.Versions.GetAsset(ref tempPath) != null;
+    }
+    
+    
+
+    /*
+     * 资源是否已下载
+     * 这个地方我们做这个处理,如果判定不存在,我们再尝试,pvelevel/pvelevel_download
+     */
+    public bool IsAssetDownloaded(string path)
+    {
+        return VEngine.Versions.IsAssetDownloaded(path);
+        //每次进来从dic筛选下吧.相比较而言比checkres要好些
+        if (swapPrefabPathCache.TryGetValue(path, out string swapPath))
+        {
+            return true; //如果在这个里面表示之前已经筛选过,而且是已经存在的情况
+        }
+        else
+        {
+            var result = VEngine.Versions.IsAssetDownloaded(path);
+            if (result == false)
+            {
+                string newPath = "";
+                if (path.Contains(PVEPrefab))
                 {
-                    prefab.CreatePool();
-                    GameObject go = prefab.Spawn();
-                    AddAutoRelease(key, go);
-                    callback?.Invoke(go);
-                    return;
-                }
-                callback?.Invoke(null);
-            });
-        }
-
-        public void LoadGameObjectAsyncWithoutCache (string assetPath, Transform parent, Action<GameObject> callback)
-        {
-            ParseAssetPath(assetPath, true, out var assetName, out var assetBundle);
-            LoadAssetAsync<GameObject>(assetBundle, assetName, (key, asset, err) =>
-            {
-                if (asset is GameObject prefab)
+                    newPath = path.Replace(PVEPrefab, PVELevel_Download);
+                    result = VEngine.Versions.IsAssetDownloaded(newPath);
+                }else if (path.Contains(PVELevel_Download))
                 {
-                    GameObject go = prefab.Instantiate (parent);
-                    AddAutoRelease(key, go);
-                    callback?.Invoke(go);
-                    return;
+                    newPath = path.Replace(PVEPrefab, PVELevel_Download);
+                    result = VEngine.Versions.IsAssetDownloaded(newPath);
                 }
-                callback?.Invoke(null);
-            });
-           
+
+                if (result == true)
+                {
+                    swapPrefabPathCache.Add(path, newPath);
+                }
+            }
+            return result;
         }
 
+        
 
-#region release begin
+        
+    }
 
-        // 从池里获取一个释放信息类
-        private ReleaseInfo GetReleaseInfo()
+    public void UnloadUnusedAssets()
+    {
+        objectPoolMgr.ClearUnusedPool();
+        VEngine.Asset.UnloadUnusedAssets();
+        VEngine.Bundle.DebugOutputCache();
+    }
+    
+    
+    // 输出所有当前Bundle的细节，为了自动更新使用
+    public void DumpBundleDetail()
+    {
+        Log.Info("====================== DumpBundleDetail ======================");
+        
+        Dictionary<int, List<string>> d = new Dictionary<int, List<string>>();
+        foreach (var VARIABLE in VEngine.Asset.Cache)
         {
-            if (m_releaseInfoPool.Count == 0)
-                return new ReleaseInfo();
-
-            int lastIndex = m_releaseInfoPool.Count - 1;
-            ReleaseInfo info = m_releaseInfoPool[lastIndex];
-            m_releaseInfoPool.RemoveAt(lastIndex);
-            return info;
-        }
-
-        private void BackReleaseInfo(ReleaseInfo info)
-        {
-            if (m_releaseInfoPool.Count > 200)
-                return;
-
-            info.go = null;
-            info.delay = 0;
-            info.key = string.Empty;
-
-            m_releaseInfoPool.Add(info);
-        }
-
-        // 处理延迟释放资源
-        private void UpdateDelayRelease()
-        {
-            if (m_DelayRemoveList.Length == 0)
+            string path = VARIABLE.Value.pathOrURL;
+            VEngine.AssetInfo asset;
+            var a = VEngine.Versions.GetAsset(ref path, out asset);
+            int bundle_id = -1;
+            if (a != false)
             {
-                Log.Error("AddDelayRelease but length = 0!");
-                return;
+                bundle_id = asset.bundle;
             }
 
-            // 从后向前删除即可
-            var curSlot = m_DelayRemoveList[m_DelayTick % m_DelayRemoveList.Length];
-            for (int i = curSlot.Count - 1; i>=0; --i)
+            List<string> li;
+            if (d.TryGetValue(bundle_id, out li))
             {
-                var obj = curSlot[i];
-                if (m_DelayTick < obj.delay) 
+                li.Append(path);
+            }
+            else
+            {
+                li = new List<string>();
+                li.Add(path);
+                d.Add(bundle_id, li);
+            }
+        }
+         
+        Log.Info("++ Using Bundle and Asset");
+        foreach (var VARIABLE in VEngine.Bundle.Cache)
+        {
+            Log.Info("  [BUNDLE] {0}", VARIABLE.Key);
+            VEngine.Bundle b = VARIABLE.Value;
+            
+            List<string> li;
+            if (d.TryGetValue(b.GetInfo().id, out li))
+            {
+                foreach (var v in li)
+                {
+                    Log.Info("   {0}", v);
+                }
+            }
+        }
+        
+        Log.Info("++ Loading Bundles");
+        foreach (var VARIABLE in VEngine.Loadable.Loading)
+        {
+            Log.Info("  [BUNDLE] {0}", VARIABLE.pathOrURL);
+        }
+
+        Log.Info("++ Unused Bundles");
+        foreach (var VARIABLE in VEngine.Bundle.Unused)
+        {
+            Log.Info("  [BUNDLE] {0}", VARIABLE.pathOrURL);
+            
+            List<string> li;
+            if (d.TryGetValue(VARIABLE.GetInfo().id, out li))
+            {
+                foreach (var v in li)
+                {
+                    Log.Info("   {0}", v);
+                }
+            }
+        }
+
+        
+        objectPoolMgr.DebugOutput();
+        
+        return;
+    }
+
+
+    public void CollectGarbage()
+    {
+        // 输出日志
+        Log.Info("CollectGarbage begin");
+        objectPoolMgr.DebugOutput();
+        VEngine.Asset.DebutOutputCache();
+        VEngine.Bundle.DebugOutputCache();
+        
+        objectPoolMgr.ClearUnusedPool();
+        VEngine.Asset.UnloadUnusedAssets();
+        
+        Log.Info("CollectGarbage end");
+        objectPoolMgr.DebugOutput();
+        VEngine.Asset.DebutOutputCache();
+        VEngine.Bundle.DebugOutputCache();
+    }
+
+    public void DebugOutput()
+    {
+        objectPoolMgr.DebugOutput();
+        VEngine.Asset.DebutOutputCache();
+        VEngine.Bundle.DebugOutputCache();
+    }
+
+    public void DebugLoadCount()
+    {
+        VEngine.Asset.DebugLoadCount();
+    }
+
+    public void RemoveCachedUnusedAssets()
+    {
+        VEngine.Asset.RemoveCachedUnusedAssets();
+    }
+
+    public string GetResVersion()
+    {
+        return VEngine.Versions.ManifestsVersion;
+    }
+
+    public bool IsSimulation
+    {
+        get { return VEngine.Versions.IsSimulation; }
+    }
+
+    public bool SkipUpdate
+    {
+        get { return VEngine.Versions.SkipUpdate; }
+        set { VEngine.Versions.SkipUpdate = value; }
+    }
+
+    public bool SplitApk
+    {
+        get
+        {
+#if UNITY_EDITOR
+            return false;
+#endif
+#if SPLIT_APK
+            return true;
+#endif
+            return false;
+        }
+    }
+
+    public void Update()
+    {
+        UpdateInstance();
+
+        if (Time.realtimeSinceStartup - lastTimePerSecondUpdate >= 1)
+        {
+            lastTimePerSecondUpdate = Time.realtimeSinceStartup;
+            
+            UnityUIExtension.Update();
+            UpdatePoolClean();
+            UpdatePreloadRelease();
+        }
+        
+        _updateBkground?.Update();
+    }
+
+    private void UpdatePoolClean()
+    {
+        objectPoolMgr.TryCleanPool();
+    }
+
+    private void UpdatePreloadRelease()
+    {
+        foreach (var i in preloadCache)
+        {
+            if (i.Value.expiredTime < Time.realtimeSinceStartup)
+            {
+                i.Value.asset.Release();
+                keysRemove.Add(i.Key);
+            }
+        }
+
+        if (keysRemove.Count > 0)
+        {
+            foreach (var key in keysRemove)
+            {
+                preloadCache.Remove(key);
+            }
+            keysRemove.Clear();
+        }
+    }
+    
+    //========================================================================
+    // Sprite late binding
+    //========================================================================
+    #region SpriteAtlas
+    
+    private const string AtlasRootPath = "Assets/Main/Atlas/{0}.spriteatlas";
+    
+    private void OnAtlasRegistered(SpriteAtlas sa)
+    {
+        Log.Debug("OnAtlasRegistered: {0},{1}", sa.name, Time.frameCount);
+    }
+    
+    private void OnAtlasRequested(string atlasName, System.Action<SpriteAtlas> callback)
+    {
+        Log.Info("OnAtlasRequested: {0},{1}", atlasName, Time.frameCount);
+
+        var atlasPath = string.Format(AtlasRootPath, atlasName);
+        var req = VEngine.Asset.Load(atlasPath, typeof(SpriteAtlas));
+        if (!req.isError)
+        {
+            Log.Info("OnAtlasRequested ok: {0}  in  {1}", atlasName, req.pathOrURL);
+            callback(req.asset as SpriteAtlas);
+        }
+        else
+        {
+            Log.Info("OnAtlasRequested not found: {0}");
+            callback(null);
+        }
+    }
+    
+    #endregion
+    
+    //========================================================================
+    // GameObject Instantiate & Destroy
+    //========================================================================
+    #region Instantiate & Destroy
+    
+    private static readonly int MAX_INSTANCE_PERFRAME = 200;
+    private static readonly float MAX_INSTANCE_TIME = 35.0f;
+    private ObjectPoolMgr objectPoolMgr = new ObjectPoolMgr();
+    private List<InstanceRequest> toInstanceList = new List<InstanceRequest>();
+    private List<InstanceRequest> instancingList = new List<InstanceRequest>();
+    private Dictionary<GameObject, InstanceRequest> gameObject2Request = new Dictionary<GameObject, InstanceRequest>();
+
+    private void UpdateInstance()
+    {
+        int max = MAX_INSTANCE_PERFRAME;
+        if (toInstanceList.Count > 0 && instancingList.Count < max)
+        {
+            int count = Math.Min(max - instancingList.Count, toInstanceList.Count);
+            for (var i = 0; i < count; ++i)
+            {
+                var item = toInstanceList[i];
+                if (item.state == InstanceRequest.State.Destroy)
                     continue;
-                curSlot.RemoveAt(i);
-                // 为false的原因：避免延迟期间，又被重新引用
-                RemoveCachedAsset(obj.key,false);
-                BackReleaseInfo(obj);
+
+                item.Instantiate();
+                instancingList.Add(item);
+            }
+
+            toInstanceList.RemoveRange(0, count);
+        }
+
+        var time = DateTime.Now.TimeOfDay.TotalMilliseconds;
+        int insCount = 0;
+        for (var i = 0; i < instancingList.Count; i++)
+        {
+            var item = instancingList[i];
+            if (item.Update())
+                continue;
+           
+
+            instancingList.RemoveAt(i);
+            --i;
+            ++insCount;
+            if (DateTime.Now.TimeOfDay.TotalMilliseconds - time > MAX_INSTANCE_TIME)
+            {
+                Log.Debug("resource log long time: {0} use time: {1} instaceCount : {2}", item.PrefabPath,
+                    DateTime.Now.TimeOfDay.TotalMilliseconds - time, insCount);
+                break;
             }
         }
 
-        // 添加自动释放资源
-        void AddAutoRelease(string key, GameObject obj)
-        {
-            ReleaseInfo info = GetReleaseInfo();
-            info.key = key;
-            info.go = obj;
+        // if (insCount > 0)
+        // {
+        //     Log.Debug("resource log instance count: {0} use time: {1}", insCount,
+        //         DateTime.Now.TimeOfDay.TotalMilliseconds - time);
+        // }
+    }
 
-            m_autoRemoveList.Add(info);
+
+    private void ClearInstance()
+    {
+        foreach (var i in toInstanceList)
+        {
+            i.Destroy(); 
         }
 
-        public void AutoRelease (string key, GameObject obj)
+        foreach (var i in instancingList)
         {
-            AddAutoRelease (key, obj);
+            i.Destroy();
         }
+    }
 
-        private void UpdateAutoRelease2()
-        {            
-            for (int i=0; i<m_autoRemoveList.Count; ++i)
+    public ObjectPool GetObjectPool(string prefabPath)
+    {
+        return objectPoolMgr.GetPool(prefabPath, this);
+    }
+
+    public static string PVEPrefab = "Assets/Main/Prefabs/PVELevel/";
+    public static string PVELevel_Download = "Assets/Main/Prefabs/PVELevel_Download/";
+
+    private bool m_isMainLevel = false;
+    private int m_levelId = 0;
+
+    public void SetMainLevel(bool isMainLevel, int levelid)
+    {
+        m_isMainLevel = isMainLevel;
+        m_levelId = levelid;
+    }
+
+    private string GetRealPath_Native(string prefabPath)
+    {
+#if UNITY_EDITOR
+        if (prefabPath.StartsWith(PVEPrefab))
+        {
+            if (m_isMainLevel) //优先pveprefab,然后再pvedownload
             {
-                var obj = m_autoRemoveList[i];
-                // 为了防止O(n^2)移动，这里使用线性移动处理
-                // 每次直接把最后的拿过来放在这里，然后下一秒再检测。
-
-                // NOTICE：这里使用了Unity的处理，Unity在引擎对象被释放后，会把C#层的obj操作符重载且强行等于null（但实际对象不为null）。
-                // 所以这里的处理是可以成立的。
-                if (obj.go == null)
+                // if (String.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(prefabPath)))
+                if (!File.Exists(prefabPath))
                 {
-                    m_autoRemoveList[i] = m_autoRemoveList[m_autoRemoveList.Count - 1];
-                    m_autoRemoveList.RemoveAt(m_autoRemoveList.Count - 1);
+                    Debug.Log($">>>资源不存在: 关卡id: {m_levelId} 资源名称: {prefabPath}");
+                    string newstr = prefabPath.Replace(PVEPrefab, PVELevel_Download);
+                    swapPrefabPathCache.Add(prefabPath, newstr);
+                    prefabPath = newstr;
+                }
+            }
+            else
+            {
+                string newstr = prefabPath.Replace(PVEPrefab, PVELevel_Download);
+                /*
+                 *  这个地方不使用AssetPathToGUID,测试发现即使文件被移动了,还是可以取到值.[但是之前测试可以正常返回""的啊。诡异!]这个地方可能需要reimport,但是通过
+                 *  unity操作应该可以刷新文件缓存了啊。这个需要查一查
+                 */
+                // if (!String.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(newstr)))
+                if (File.Exists(newstr))
+                {
+                    swapPrefabPathCache.Add(prefabPath, newstr);
+                    prefabPath = newstr;
+                }
+                else
+                {
+                    Debug.Log($">>>资源不存在: 关卡id: {m_levelId} 资源名称: {prefabPath}");
+                }
+            }
+        }
+#endif
+        return prefabPath;
+    }
 
-                    UnloadAssetWithKey(obj.key);
-                    BackReleaseInfo(obj);
+    private string GetRealPath_AB(string prefabPath)
+    {
+        if (prefabPath.StartsWith(PVEPrefab))
+        {
+            if (m_isMainLevel) //优先pveprefab,然后再pvedownload
+            {
+                if (!IsAssetDownloaded(prefabPath))
+                {
+                    Debug.Log($">>>资源不存在: 关卡id: {m_levelId} 资源名称: {prefabPath}");
+                    var newstr = prefabPath.Replace(PVEPrefab, PVELevel_Download);
+                    swapPrefabPathCache.Add(prefabPath, newstr);
+                }
+            }
+            else
+            {
+                string newstr = prefabPath.Replace(PVEPrefab, PVELevel_Download);
+                if (IsAssetDownloaded(newstr))
+                {
+                    swapPrefabPathCache.Add(prefabPath, newstr);
+                    prefabPath = newstr;
+                }
+                else
+                {
+                    Debug.Log($">>>资源不存在: 关卡id: {m_levelId} 资源名称: {prefabPath}");
                 }
             }
         }
 
-#endregion
+        return prefabPath;
+    }
+
+    public string GetRealPath(string prefabPath)
+    {
+        if (swapPrefabPathCache.TryGetValue(prefabPath, out string newPath))
+        {
+            prefabPath = newPath;
+        }
+        else
+        {
+#if UNITY_EDITOR
+            if (Versions.IsSimulation)
+                return GetRealPath_Native(prefabPath);
+            else
+            {
+                return GetRealPath_AB(prefabPath);
+            }
+#else
+            return GetRealPath_AB(prefabPath);
+#endif
+        }
+
+        return prefabPath;
+    }
+
+    public InstanceRequest InstantiateAsync(string prefabPath)
+    {
+        /*只在这个地方做替换路径,目前涉及到的是基本上都是通过InstantiateAsyncId 这个来做的,所以只在这个地方加
+            不然太浪费了
+         */
+        prefabPath = GetRealPath(prefabPath); 
+        var req = new InstanceRequest(prefabPath);
+        toInstanceList.Add(req);
+        return req;
+    }
+
+    #endregion
+}
+
+public class InstanceRequest
+{
+    private string prefabPath;
+    private ObjectPool pool;
+    private int req_index;
+
+    public static int request_count = 1;
+    public static Dictionary<int, InstanceRequest> all_request = new Dictionary<int, InstanceRequest>();
+
+    public enum State
+    {
+        Init, Loading, Instanced, Destroy
+    }
+
+    public string PrefabPath
+    {
+        get { return prefabPath; }
+    }
+
+    public bool isDone { get; private set; }
+
+    public State state;
+    public GameObject gameObject;
+    public event Action<InstanceRequest> completed;
+
+    public InstanceRequest(string prefabPath)
+    {
+        this.prefabPath = prefabPath;
+        state = State.Init;
+    }
+    
+    public void Instantiate()
+    {
+        pool = GameEntry.Resource.GetObjectPool(prefabPath);
+        state = State.Loading;
+        
+        req_index = ++request_count;
+        all_request[req_index] = this;
+    }
+
+    public void Destroy(bool backToPool = true)
+    {
+        if (gameObject != null)
+        {
+            pool.DeSpawn(gameObject, backToPool);
+            gameObject = null;
+            pool = null;
+        }
+        else
+        {
+            int a = 0;
+        }
+
+        all_request.Remove(req_index);
+        
+        state = State.Destroy;
+        completed = null;
+    }
+
+    public bool Update()
+    {
+        if (state == State.Destroy)
+            return false;
+        if (!pool.IsAssetLoaded)
+            return true;
+        try
+        {
+            if (gameObject == null)
+            {
+                gameObject = pool.Spawn();
+                state = State.Instanced;
+                isDone = true;
+            }
+
+            completed?.Invoke(this);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogErrorFormat("prefabPath : {0}, error {1}", prefabPath, ex.Message);
+        }
+        finally
+        {
+            completed = null;
+        }
+        
+        return false;
+    }
+}
+
+//
+// UI扩展
+//
+public static class UnityUIExtension
+{
+    static List<UnityEngine.Object> keyToRemove = new List<UnityEngine.Object>(100);
+    static readonly Dictionary<UnityEngine.Object, VEngine.Asset> AllRefs = new Dictionary<UnityEngine.Object, VEngine.Asset>();
+    
+    public static void LoadSprite(this Image image, string spritePath, string defaultSprite = null)
+    {
+        if (AllRefs.TryGetValue(image, out var asset))
+        {
+            asset.Release();
+            AllRefs.Remove(image);
+        }
+        asset = LoadSprite(spritePath, defaultSprite);
+        if (asset != null && !asset.isError)
+        {
+            AllRefs.Add(image, asset);
+            image.sprite = asset.asset as Sprite;
+        }
+    }
+    
+    public static void LoadSprite(this CircleImage image, string spritePath, string defaultSprite = null)
+    {
+        if (AllRefs.TryGetValue(image, out var asset))
+        {
+            asset.Release();
+            AllRefs.Remove(image);
+        }
+        asset = LoadSprite(spritePath, defaultSprite);
+        if (asset != null && !asset.isError)
+        {
+            AllRefs.Add(image, asset);
+            image.sprite = asset.asset as Sprite;
+        }
+    }
+    
+    public static void LoadSprite(this SpriteRenderer spriteRenderer, string spritePath, string defaultSprite = null)
+    {
+        if (AllRefs.TryGetValue(spriteRenderer, out var asset))
+        {
+            asset.Release();
+            AllRefs.Remove(spriteRenderer);
+        }
+        asset = LoadSprite(spritePath, defaultSprite);
+        if (asset != null && !asset.isError)
+        {
+            AllRefs.Add(spriteRenderer, asset);
+            spriteRenderer.sprite = asset.asset as Sprite;
+        }
+    }
+    
+    public static void LoadSprite(this SpriteMeshRenderer meshRenderer, string spritePath, string defaultSprite = null)
+    {
+        if (AllRefs.TryGetValue(meshRenderer, out var asset))
+        {
+            asset.Release();
+            AllRefs.Remove(meshRenderer);
+        }
+        asset = LoadSprite(spritePath, defaultSprite);
+        if (asset != null && !asset.isError)
+        {
+            AllRefs.Add(meshRenderer, asset);
+            meshRenderer.sprite = asset.asset as Sprite;
+        }
+    }
+
+    public static void Update()
+    {
+        foreach (var kv in AllRefs)
+        {
+            var obj = kv.Key;
+            if (obj == null)
+            {
+                kv.Value.Release();
+                keyToRemove.Add(obj);
+            }
+        }
+
+        if (keyToRemove.Count > 0)
+        {
+            foreach (var k in keyToRemove)
+            {
+                AllRefs.Remove(k);
+            }
+            keyToRemove.Clear();
+        }
+    }
+    
+    private static VEngine.Asset LoadSprite(string spritePath, string defaultSprite)
+    {
+        if (!spritePath.EndsWith(".png"))
+        {
+            spritePath += ".png";
+        }
+        var req = VEngine.Asset.Load(spritePath, typeof(Sprite));
+        if ((req == null || req.isError) && !string.IsNullOrEmpty(defaultSprite))
+        {
+            if (!defaultSprite.EndsWith(".png"))
+            {
+                defaultSprite += ".png";
+            }
+            req = VEngine.Asset.Load(defaultSprite, typeof(Sprite));
+        }
+
+        return req;
+    }
+    
+    
+    
+#region ScrollRect
+    public static void SetHorizontalNormalizedPosition(this ScrollRect scrollRect, float ratio)
+    {
+        scrollRect.horizontalNormalizedPosition = ratio;
+    }
+
+    public static float GetHorizontalNormalizedPosition(this ScrollRect scrollRect)
+    {
+        return scrollRect.horizontalNormalizedPosition;
+    }
+
+    #endregion
+    
+}
+
+
+//
+// 后台下载更新
+//
+class DownloadUpdateBkground
+{
+    public List<VEngine.Manifest> manifests;
+
+    private VEngine.DownloadVersions _downloadVersions;
+    
+    public void Start(List<VEngine.DownloadInfo> downloadInfos)
+    {
+        _downloadVersions = VEngine.Versions.DownloadAsync(downloadInfos.ToArray());
+    }
+
+    public void Update()
+    {
+        if (_downloadVersions != null && _downloadVersions.isDone)
+        {
+            if (_downloadVersions.isError)
+            {
+                var downloadInfos = new List<VEngine.DownloadInfo>();
+                var totalSize = GameEntry.Resource.GetDownloadSize(DownloadType.Normal, manifests, downloadInfos);
+                if (totalSize > 0)
+                {
+                    Log.Debug("restart bkground download {0}", totalSize);
+                    Start(downloadInfos);
+                }
+                else
+                {
+                    _downloadVersions = null;
+                    Log.Debug("finish bkground download 1");
+                }
+            }
+            else
+            {
+                _downloadVersions = null;
+                Log.Debug("finish bkground download 2");
+            }
+        }
     }
 }

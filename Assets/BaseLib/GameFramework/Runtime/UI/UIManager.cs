@@ -508,20 +508,21 @@ namespace GameFramework.UI
             m_UIFormAssetNamesBeingLoaded.Add(uiFormAssetName);
             uiGroup.SetUIFormCount(uiGroup.UIFormCount + 1);
      
-            GameKit.Base.ResourceManager.Instance.LoadAssetAsync<GameObject>(uiFormAssetName,  ( key, asset, err ) =>
-            {
-				string uiKey = Path.GetFileNameWithoutExtension(uiFormAssetName);
-                var info = new OpenUIFormInfo(serialId, uiKey, uiGroup, pauseCoveredUIForm, userData, OnComplete, args);
-                if (string.IsNullOrEmpty(err) )
-                {
-                    LoadUIFormSuccessCallback(uiFormAssetName, asset, info);
-                }
-                else
-                {
-                    LoadUIFormFailureCallback(uiFormAssetName,  err,info );
-                }
-
-            });
+            //LSZ
+    //         GameKit.Base.ResourceManager.Instance.LoadAssetAsync<GameObject>(uiFormAssetName,  ( key, asset, err ) =>
+    //         {
+				// string uiKey = Path.GetFileNameWithoutExtension(uiFormAssetName);
+    //             var info = new OpenUIFormInfo(serialId, uiKey, uiGroup, pauseCoveredUIForm, userData, OnComplete, args);
+    //             if (string.IsNullOrEmpty(err) )
+    //             {
+    //                 LoadUIFormSuccessCallback(uiFormAssetName, asset, info);
+    //             }
+    //             else
+    //             {
+    //                 LoadUIFormFailureCallback(uiFormAssetName,  err,info );
+    //             }
+    //
+    //         });
 
             return serialId;
         }
@@ -565,19 +566,20 @@ namespace GameFramework.UI
             m_UIFormAssetNamesBeingLoaded.Add(uiFormAssetName);
             uiGroup.SetUIFormCount(uiGroup.UIFormCount + 1);
 
-            GameKit.Base.ResourceManager.Instance.LoadAssetAsync<GameObject>(uiFormAssetName, (key, asset, err) =>
-            {
-                var info = new OpenUIFormInfo(serialId, uiKey, uiGroup, pauseCoveredUIForm, userData, OnComplete, args);
-                if (string.IsNullOrEmpty(err))
-                {
-                    LoadUIFormSuccessCallback(uiFormAssetName, asset, info);
-                }
-                else
-                {
-                    LoadUIFormFailureCallback(uiFormAssetName, err, info);
-                }
-
-            });
+            //LSZ
+            // GameKit.Base.ResourceManager.Instance.LoadAssetAsync<GameObject>(uiFormAssetName, (key, asset, err) =>
+            // {
+            //     var info = new OpenUIFormInfo(serialId, uiKey, uiGroup, pauseCoveredUIForm, userData, OnComplete, args);
+            //     if (string.IsNullOrEmpty(err))
+            //     {
+            //         LoadUIFormSuccessCallback(uiFormAssetName, asset, info);
+            //     }
+            //     else
+            //     {
+            //         LoadUIFormFailureCallback(uiFormAssetName, err, info);
+            //     }
+            //
+            // });
 
             return serialId;
         }
@@ -659,9 +661,7 @@ namespace GameFramework.UI
             {
                 m_UIFormOpenStack.Push(m_TempStack.Pop());
             }
-
-			this.ResumeCoverUI(uiForm.GetUIKey(), uiForm.GetDepth());
-
+            
 			uiGroup.RemoveUIForm(uiForm);
             uiForm.OnClose(userData);
 
@@ -753,8 +753,6 @@ namespace GameFramework.UI
                     
 					m_OpenUIFormSuccessEventHandler(this, args);
 				}
-
-				this.PauseCoverUI(uiFormInfo.UIKey, uiForm.GetDepth());
 			}
 			catch (Exception exception)
 			{
@@ -828,87 +826,6 @@ namespace GameFramework.UI
 
 			throw new GameFrameworkException(appendErrorMessage);
 		}
-
-        #region 关闭低层级UI的渲染
-
-        /// <summary>
-        /// 暂停被覆盖的UI
-        /// </summary>
-        public void PauseCoverUI(string uiKey, int depth)
-        {
-			if (!GameEntry.Const.GetBool(LF.Constant.Keys.IsHideCoveredUI))
-				return;
-
-			if (!this.IsValidUIKey(uiKey))
-				return;
-
-			var datarow = GameEntry.Table.GetDataRow<LF.UiDataRow>(uiKey);
-			if (null == datarow || !datarow.IsFullScreen)
-				return;
-
-			foreach(var item in m_UIFormOpenStack)
-            {
-				UIForm form = item as UIForm;
-				if (null == form || form.GetUIKey() == uiKey || form.GetDepth() >= depth)
-					continue;
-
-				form.FullCovered();
-			}
-		}
-
-        /// <summary>
-        /// 恢复被覆盖的UI
-        /// </summary>
-        public void ResumeCoverUI(string uiKey, int depth)
-        {
-            if (!GameEntry.Const.GetBool(LF.Constant.Keys.IsHideCoveredUI))
-                return;
-
-            if (!this.IsValidUIKey(uiKey))
-                return;
-
-            var datarow = GameEntry.Table.GetDataRow<LF.UiDataRow>(uiKey);
-            if (null == datarow || !datarow.IsFullScreen)
-                return;
-
-			if (null == m_UIFormOpenStack || m_UIFormOpenStack.Count <= 0)
-				return;
-
-			foreach (var item in m_UIFormOpenStack)
-			{
-                UIForm form = item as UIForm;
-                if (null == form)
-                    continue;
-
-				// 层级高的UI跳过
-				if (form.GetDepth() >= depth)
-					continue;
-
-				form.FullReveal();
-
-                string tempKey = form.GetUIKey();
-                if (!string.IsNullOrEmpty(uiKey))
-                {
-                    var tempDataRow = GameEntry.Table.GetDataRow<LF.UiDataRow>(tempKey);
-                    if (null != tempDataRow && tempDataRow.IsFullScreen)
-                        return;
-                }
-            }
-		}
-
-        private bool IsValidUIKey(string uiKey)
-        {
-            if (string.IsNullOrEmpty(uiKey))
-                return false;
-
-            var datarow = GameEntry.Table.GetDataRow<LF.UiDataRow>(uiKey);
-            if (null == datarow)
-                return false;
-
-			return true;
-        }
-
-        #endregion
-    }
+	}
 
 }

@@ -177,8 +177,8 @@ namespace UnityGameFramework.Runtime
             m_SerialId = 0;
             m_DepthInUIGroup = 0;
             m_PauseCoveredUIForm = true;
-
-            ResourceUtils.UnloadAssetWithPath<GameObject>(m_UIFormAssetName, UnloadImmediately);
+            //LSZ
+            // ResourceUtils.UnloadAssetWithPath<GameObject>(m_UIFormAssetName, UnloadImmediately);
         }
 
         /// <summary>

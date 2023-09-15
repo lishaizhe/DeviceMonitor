@@ -184,22 +184,7 @@ namespace GameFramework
         {
             _Log (LogLevel.Fatal, str);
         }
-
         
-
-        private static long startSecond = 0;
-        public static string GetDeltaSecond()
-        {
-            if (startSecond == 0)
-            {
-                startSecond = GameEntry.Timer.GetLocalSeconds();
-            }
-            var _deltaTime = (int)(GameEntry.Timer.GetLocalSeconds() - startSecond);
-            return StringUtils.GetTimerString(_deltaTime);
-        }
-
-
-
         #region 正式版本上打印日志接口  [不加条件编译，预留出来之后 Release包不屏蔽此类日志] 
 
         // release debug 线上调试日志输出

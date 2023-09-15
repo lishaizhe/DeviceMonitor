@@ -182,30 +182,7 @@ namespace UnityGameFramework.Runtime
                 Log.Error("UIError: UIFormLogic OnClose gameObject is null !");
                 return;
             }
-
-            if ( BackArga != null && BackArga.Length == 2)
-            {
-                string uiformStr = BackArga[0].ToString();
-                string uiGroup = BackArga[1].ToString();
-                if(string.IsNullOrEmpty(uiformStr) || string.IsNullOrEmpty(uiGroup))
-                {
-                    return;
-                }
-                if ( GameEntry.UI.IsLoadingUIByKey(uiformStr) || GameEntry.UI.HasUIByKey(uiformStr) )
-                {
-                    return;
-                }
-                if(GameEntry.UI.HasUIInConfig(uiformStr))
-                {
-                    GameEntry.UI.OpenUIByKey(uiformStr, null, uiGroup);
-                }
-                else
-                {
-                    LuaManager.Instance.OpenGameUI(BackArga[0].ToString() , uiGroup);
-                }
-
-            }
-
+            
             gameObject.SetLayerRecursively(m_OriginalLayer);
             gameObject.Recycle();
         }
@@ -318,12 +295,10 @@ namespace UnityGameFramework.Runtime
 
         public void OnAfterOpenUI()
         {
-            this.CheckAndOpenSenceCameraRender(false);
         }
 
         public void OnBeforeCloseUI()
         {
-            this.CheckAndOpenSenceCameraRender(true);
         }
 
         /// <summary>
@@ -355,63 +330,5 @@ namespace UnityGameFramework.Runtime
             if(notify)
                 this.OnFullReveal();
         }
-
-        #region 全屏界面关闭场景相机渲染处理逻辑
-
-        public static int g_CloseSenceCameraCount = 0;
-
-        /// <summary>
-        /// 还原场景相机状态
-        /// </summary>
-        public void RevertSenceCameraRender()
-        {
-            g_CloseSenceCameraCount = 0;
-            this.ToggleBackgroundCamera(true);
-        }
-
-        /// <summary>
-        /// 检查并打开或者关闭场景相机的渲染
-        /// </summary>
-        /// <param name="isOpen">true:打开 false:关闭</param>
-        protected void CheckAndOpenSenceCameraRender(bool isOpen)
-        {
-            if (string.IsNullOrEmpty(this.uiKey))
-                return;
-
-            var datarow = GameEntry.Table.GetDataRow<LF.UiDataRow>(this.uiKey);
-            if (null == datarow || (!datarow.IsFullScreen /*&& !datarow.IsCaptureSceneScreenshot*/))
-                return;
-
-            if (!isOpen)
-            {
-                g_CloseSenceCameraCount++;
-
-                this.ToggleBackgroundCamera(false);
-            }
-            else
-            {
-                g_CloseSenceCameraCount--;
-
-                if (g_CloseSenceCameraCount < 0)
-                    g_CloseSenceCameraCount = 0;
-
-                if (g_CloseSenceCameraCount <= 0)
-                    this.ToggleBackgroundCamera(true);
-            }
-        }
-
-        private void ToggleBackgroundCamera(bool bSet)
-        {
-            if (SceneContainer.Instance.IsInWorld())
-                SceneContainer.Instance.WorldScene.ToggleCamera(bSet);
-            else if (SceneContainer.Instance.IsInBattleScene())
-                SceneContainer.Instance.BattleScene.ToggleCamera(bSet);
-            else if (SceneContainer.Instance.IsInMainCity())
-                SceneContainer.Instance.MainScene.ToggleScene(bSet);
-            else if(GameEntry.SceneContainer.PveScene != null)
-                GameEntry.SceneContainer.PveScene.ToggleScene(bSet);
-        }
-
-        #endregion
     }
 }

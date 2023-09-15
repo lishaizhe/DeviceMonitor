@@ -63,11 +63,6 @@ namespace UnityGameFramework.Runtime
             return m_EventManager.Check(id, handler);
         }
 
-        public bool Check(EventId id, EventHandler<GameEventArgs> handler)
-        {
-            return m_EventManager.Check((int)id, handler);
-        }
-
         /// <summary>
         /// 订阅事件处理回调函数。
         /// </summary>
@@ -78,10 +73,6 @@ namespace UnityGameFramework.Runtime
             m_EventManager.Subscribe(id, handler);
         }
 
-        public void Subscribe(EventId id, EventHandler<GameEventArgs> handler)
-        {
-            m_EventManager.Subscribe((int)id, handler);
-        }
 
         /// <summary>
         /// 取消订阅事件处理回调函数。
@@ -93,10 +84,6 @@ namespace UnityGameFramework.Runtime
             m_EventManager.Unsubscribe(id, handler);
         }
 
-        public void Unsubscribe(EventId id, EventHandler<GameEventArgs> handler)
-        {
-            m_EventManager.Unsubscribe((int)id, handler);
-        }
         /// <summary>
         /// 设置默认事件处理函数。
         /// </summary>
@@ -115,12 +102,7 @@ namespace UnityGameFramework.Runtime
         {
             m_EventManager.FireAsync(sender, e);
         }
-
-        public void FireAsync(object sender, EventId eventId, object userData = null)
-        {
-            m_EventManager.FireAsync(sender, ReferencePool.Acquire<CommonEventArgs>().FillBasic(eventId, userData));
-        }
-
+        
         /// <summary>
         /// 抛出事件立即模式，这个操作不是线程安全的，事件会立刻分发。
         /// </summary>
@@ -131,15 +113,5 @@ namespace UnityGameFramework.Runtime
             m_EventManager.Fire(sender, e);
         }
         
-        public void Fire(object sender, EventId eventId, object userData = null, int intPara = 0, string strPara = null)
-        {
-            var e = ReferencePool.Acquire<CommonEventArgs>();
-            e.setEventId(eventId);
-            e.UserData = userData;
-            e.IntPara1 = intPara;
-            e.StrPara1 = strPara;
-            
-            m_EventManager.Fire(sender, e);
-        }
     }
 }

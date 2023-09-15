@@ -323,7 +323,7 @@ namespace UnityGameFramework.Runtime
         /// <returns></returns>
         public string GetUIGruopName(Transform trans)
         {
-            string groupName = LFDefines.UIGroup.Default;
+            string groupName = "";
 
             int count = 0;
             int _loop_max_count = 200;
@@ -442,72 +442,17 @@ namespace UnityGameFramework.Runtime
         {
             return m_UIManager.HasUIForm(uiFormAssetName);
         }
-
-        /// <summary>
-        /// 是否存在界面。
-        /// </summary>
-        /// <param name="uiFormAssetName">界面资源名称。</param>
-        /// <returns>是否存在界面。</returns>
-        [GenerateWrap]
-        public bool HasUIByKey(string uiKey)
-        {
-            var datarow = GameEntry.Table.GetDataRow<LF.UiDataRow>(uiKey);
-            if (null == datarow)
-                return false;
-
-            return m_UIManager.HasUIForm(datarow.AssetName);
-        }
-
-        /// <summary>
-        /// 是否存在于UI配置里，
-        /// 如果没有再使用lua调用
-        /// </summary>
-        /// <param name="uiKey"></param>
-        /// <returns></returns>
-        public bool HasUIInConfig( string uiKey )
-        {
-            var datarow = GameEntry.Table.GetDataRow<LF.UiDataRow>(uiKey);
-            if ( null == datarow )
-            {
-                return false;
-            }
-            return true;
-        }
-        /// <summary>
-        /// 获取界面。
-        /// </summary>
-        /// <param name="serialId">界面序列编号。</param>
-        /// <returns>要获取的界面。</returns>
-        [GenerateWrap]
-        public UIForm GetUIForm(int serialId)
-        {
-            return (UIForm)m_UIManager.GetUIForm(serialId);
-        }
-
+        
         /// <summary>
         /// 获取界面。
         /// </summary>
         /// <param name="uiFormAssetName">界面资源名称。</param>
         /// <returns>要获取的界面。</returns>
-        [GenerateWrap]
         public UIForm GetUIForm(string uiFormAssetName)
         {
             return (UIForm)m_UIManager.GetUIForm(uiFormAssetName);
         }
-
-        /// <summary>
-        /// 获取界面。
-        /// </summary>
-        /// <param name="uiFormAssetName">界面资源名称。</param>
-        /// <returns>要获取的界面。</returns>
-        public UIForm GetUIByKey(string uiKey)
-        {
-            var datarow = GameEntry.Table.GetDataRow<LF.UiDataRow>(uiKey);
-            if (null == datarow)
-                return null;
-
-            return (UIForm)m_UIManager.GetUIForm(datarow.AssetName);
-        }
+        
 
         /// <summary>
         /// 获取界面。
@@ -557,7 +502,6 @@ namespace UnityGameFramework.Runtime
         /// </summary>
         /// <param name="uiFormAssetName">界面资源名称。</param>
         /// <returns>是否正在加载界面。</returns>,
-        [GenerateWrap]
         public bool IsLoadingUIForm(string uiFormAssetName)
         {
             return m_UIManager.IsLoadingUIForm(uiFormAssetName);
@@ -572,23 +516,7 @@ namespace UnityGameFramework.Runtime
         {
             return m_UIManager.IsToReleaseUIForm(serialId);
         }
-
-        /// <summary>
-        /// 是否正在加载界面。
-        /// </summary>
-        /// <param name="uiFormAssetName">界面资源名称。</param>
-        /// <returns>是否正在加载界面。</returns>
-        public bool IsLoadingUIByKey(string uiKey)
-        {
-            var datarow = GameEntry.Table.GetDataRow<LF.UiDataRow>(uiKey);
-            if (null == datarow)
-                return false;
-
-            return m_UIManager.IsLoadingUIForm(datarow.AssetName);
-        }
-
-      
-
+        
         public int OpenUIFromAndGetObject(string uiFormAssetName, string uiGroupName,Action<IUIForm> onComplete)
         {
 
@@ -606,84 +534,7 @@ namespace UnityGameFramework.Runtime
         {
             return OpenUIForm(uiFormAssetName, uiGroupName,  false, null, null,null);
         }
-        /// <summary>
-        /// 打开界面并传递可以返回界面数据--要返回必须要求args满足描述条件
-        /// </summary>
-        /// <param name="uiKey"></param>
-        /// <param name="userData"></param>
-        /// <param name="uiGroupName"></param>
-        /// <param name="onComplete"></param>
-        /// <param name="args"></param>(object[]{界面名字，界面层次} 至少结构)
-        /// <returns></returns>
-         public int OpenUIByKeyWithBack(string uiKey, object userData, string uiGroupName, Action<IUIForm> onComplete,params object[] args)
-        {
-            var datarow = GameEntry.Table.GetDataRow<LF.UiDataRow>(uiKey);
-            if ( null == datarow )
-            {
-                Log.Error("{0}在UI配表中不存在,请检查配置!", uiKey);
-                return 0;
-            }
-
-            var isLoading = GameEntry.UI.IsLoadingUIForm(datarow.AssetName);
-            var hasUI = GameEntry.UI.HasUIForm(datarow.AssetName);
-            if (!datarow.IsMultipleInstance && !datarow.IsRefreshOnReopenning
-                && (isLoading || hasUI))
-                return -1;
-
-            if (!datarow.IsMultipleInstance && datarow.IsRefreshOnReopenning)
-            {
-                if (hasUI)
-                    GameEntry.UI.CloseUIForm(datarow.AssetName);
-            }
-
-            //if (datarow.IsCaptureSceneScreenshot)
-            //    this.StartSceneScreenCapture();
-
-            string groupName = uiGroupName;
-            if (string.IsNullOrEmpty(groupName))
-                groupName = datarow.UIGroupName;
-
-            return OpenUIForm(uiKey, datarow.AssetName, groupName,  datarow.IsPauseCoveredUI, userData, onComplete, args);
-        }
-
-        /// <summary>
-        /// 打开界面。
-        /// </summary>
-        /// <param name="uiKey">对应ui配置表里的ID</param>
-        /// <param name="userData">打开界面的参数</param>
-        /// <param name="uiGroupName">界面分组名称,如果为null,那么以配置表为准</param>
-        /// <returns>界面的序列编号。</returns>
-        [GenerateWrap]
-        public int OpenUIByKey(string uiKey, object userData = null, string uiGroupName = null, Action<IUIForm> onComplete = null)
-        {
-            var datarow = GameEntry.Table.GetDataRow<LF.UiDataRow>(uiKey);
-            if (null == datarow)
-            {
-                Log.Error("{0}在UI配表中不存在,请检查配置!", uiKey);
-                return 0;
-            }
-
-            var isLoading = GameEntry.UI.IsLoadingUIForm(datarow.AssetName);
-            var hasUI = GameEntry.UI.HasUIForm(datarow.AssetName);
-            if (!datarow.IsMultipleInstance && !datarow.IsRefreshOnReopenning
-                && (isLoading || hasUI))
-                return -1;
-
-            if(!datarow.IsMultipleInstance && datarow.IsRefreshOnReopenning)
-            {
-                if(hasUI)
-                    GameEntry.UI.CloseUIForm(datarow.AssetName);
-            }
-
-            //if (datarow.IsCaptureSceneScreenshot)
-            //    this.StartSceneScreenCapture();
-
-            string groupName = uiGroupName;
-            if (string.IsNullOrEmpty(groupName))
-                groupName = datarow.UIGroupName;
-
-            return OpenUIForm(uiKey, datarow.AssetName, groupName, datarow.IsPauseCoveredUI, userData, onComplete, null);
-        }
+        
 
         /// <summary>
         /// 打开界面。
@@ -710,61 +561,6 @@ namespace UnityGameFramework.Runtime
         /// <returns>界面的序列编号。</returns>
         public int OpenUIForm(string uiFormAssetName, string uiGroupName, bool pauseCoveredUIForm, object userData,  Action<IUIForm> onComplete , params object[] args)
         {
-            if (uiGroupName == "Dialog")
-            {
-                // 避免ui重复打开的提示
-                if (HasUIForm(uiFormAssetName) && uiFormAssetName != LF.Constant.UIAssets.Tips)
-                {
-                    CloseUIForm(GetUIForm(uiFormAssetName));
-                }
-
-                // 如果有消息球，关闭消息球
-                if (HasUIForm(LF.Constant.UIAssets.LFMsgBallView1))
-                {
-                    CloseUIForm(LF.Constant.UIAssets.LFMsgBallView1);
-                }
-            }
-            if (uiGroupName == "Scene")
-            {
-                // 如果有消息球，关闭消息球
-                if ((uiFormAssetName.Contains("LFViewPickTip") || uiFormAssetName.Contains("LFRoomOperator")) && HasUIForm(LF.Constant.UIAssets.LFMsgBallView1))
-                {
-                    CloseUIForm(LF.Constant.UIAssets.LFMsgBallView1);
-                }
-            }
-
-            if (uiGroupName == "Default")
-            {
-                // 如果有消息球，关闭消息球
-                if (HasUIForm(LF.Constant.UIAssets.LFMsgBallView1))
-                {
-                    CloseUIForm(LF.Constant.UIAssets.LFMsgBallView1);
-                }
-            }
-
-            //王晨要求打开任意界面退出挖地模式 (房间的操作台除外)
-            if (GameEntry.UI != null && GameEntry.SceneContainer.MainScene != null && GameEntry.SceneContainer.MainScene.SceneState == LFSceneState.Dig)
-            {
-                if (!uiFormAssetName.Equals(LF.Constant.UIAssets.RoomOperator2)
-                    && !uiFormAssetName.Equals(LF.Constant.UIAssets.LFDigingTip)
-                    && !uiFormAssetName.Equals(LF.Constant.UIAssets.LFDigTipsPanel)
-                    && !uiFormAssetName.Equals(LF.Constant.UIAssets.LFUIDetailsView)
-                    && !uiFormAssetName.Equals(LF.Constant.UIAssets.LFSelectWorkerPanel)
-                    && !uiFormAssetName.Equals(LF.Constant.UIAssets.Tips)
-                    && !uiFormAssetName.Equals(LF.Constant.UIAssets.LFMsgBallView1))
-                {
-                    GameEntry.Event.Fire(this, EventId.TZ_SET_SCENE_STATE,new LFMainScene.SceneStateParam { state = LFSceneState.Normal });
-                }
-            }
-
-            //var uiKey = Path.GetFileNameWithoutExtension(uiFormAssetName);
-            //if(!string.IsNullOrEmpty(uiKey))
-            //{
-            //    var datarow = GameEntry.Table.GetDataRow<LF.UiDataRow>(uiKey);
-            //    if(null != datarow && datarow.IsCaptureSceneScreenshot)
-            //        this.StartSceneScreenCapture();
-            //}
-
 #if UNITY_EDITOR
             if (CacheUINames.Contains(uiFormAssetName))
                 CacheUINames.Remove(uiFormAssetName);
@@ -789,53 +585,6 @@ namespace UnityGameFramework.Runtime
         /// <returns>界面的序列编号。</returns>
         public int OpenUIForm(string uiKey, string uiFormAssetName, string uiGroupName, bool pauseCoveredUIForm, object userData, Action<IUIForm> onComplete, params object[] args)
         {
-            if (uiGroupName == "Dialog")
-            {
-                // 避免ui重复打开的提示
-                if (HasUIForm(uiFormAssetName) && uiFormAssetName != LF.Constant.UIAssets.Tips)
-                {
-                    CloseUIForm(GetUIForm(uiFormAssetName));
-                }
-
-                // 如果有消息球，关闭消息球
-                if (HasUIForm(LF.Constant.UIAssets.LFMsgBallView1))
-                {
-                    CloseUIForm(LF.Constant.UIAssets.LFMsgBallView1);
-                }
-            }
-            if (uiGroupName == "Scene")
-            {
-                // 如果有消息球，关闭消息球
-                if ((uiFormAssetName.Contains("LFViewPickTip") || uiFormAssetName.Contains("LFRoomOperator")) && HasUIForm(LF.Constant.UIAssets.LFMsgBallView1))
-                {
-                    CloseUIForm(LF.Constant.UIAssets.LFMsgBallView1);
-                }
-            }
-
-            if (uiGroupName == "Default")
-            {
-                // 如果有消息球，关闭消息球
-                if (HasUIForm(LF.Constant.UIAssets.LFMsgBallView1))
-                {
-                    CloseUIForm(LF.Constant.UIAssets.LFMsgBallView1);
-                }
-            }
-
-            //王晨要求打开任意界面退出挖地模式 (房间的操作台除外)
-            if (GameEntry.UI != null && GameEntry.SceneContainer.MainScene != null && GameEntry.SceneContainer.MainScene.SceneState == LFSceneState.Dig)
-            {
-                if (!uiFormAssetName.Equals(LF.Constant.UIAssets.RoomOperator2)
-                    && !uiFormAssetName.Equals(LF.Constant.UIAssets.LFDigingTip)
-                    && !uiFormAssetName.Equals(LF.Constant.UIAssets.LFDigTipsPanel)
-                    && !uiFormAssetName.Equals(LF.Constant.UIAssets.LFUIDetailsView)
-                    && !uiFormAssetName.Equals(LF.Constant.UIAssets.LFSelectWorkerPanel)
-                    && !uiFormAssetName.Equals(LF.Constant.UIAssets.Tips)
-                    && !uiFormAssetName.Equals(LF.Constant.UIAssets.LFMsgBallView1))
-                {
-                    GameEntry.Event.Fire(this, EventId.TZ_SET_SCENE_STATE, new LFMainScene.SceneStateParam { state = LFSceneState.Normal });
-                }
-            }
-
 #if UNITY_EDITOR
             if (CacheUINames.Contains(uiFormAssetName))
                 CacheUINames.Remove(uiFormAssetName);
@@ -872,19 +621,6 @@ namespace UnityGameFramework.Runtime
         /// 关闭界面。
         /// </summary>
         /// <param name="uiForm">要关闭的界面。</param>
-        public void CloseUIByKey(string uiKey)
-        {
-            var form = this.GetUIByKey(uiKey);
-            if (null == form)
-                return;
-
-            this.CloseUIForm(form);
-        }
-
-        /// <summary>
-        /// 关闭界面。
-        /// </summary>
-        /// <param name="uiForm">要关闭的界面。</param>
         public void CloseUIForm(UIForm uiForm)
         {
             if (null == uiForm) return;
@@ -892,36 +628,14 @@ namespace UnityGameFramework.Runtime
             var uiGroup = uiForm.UIGroup;
 
             m_UIManager.CloseUIForm(uiForm);
-            //just for test 先这么测试下
-            if (uiGroup != null && uiGroup.Name == "Default")
-            {
-                if (uiGroup.UIFormCount == 0)
-                {
-                    if (SceneContainer.Instance != null && SceneContainer.Instance.IsInWorld())
-                    {
-                        var camera = GameEntry.SceneContainer.WorldScene.Camera;
-                        if (camera.CurrentLod <= 4)
-                        {
-                            GameEntry.Event.Fire(this, EventId.Show_Main, null);
-                        }
-                    }
-                    else
-                    {
-                        //新任务书中有系列任务详情界面，详情界面关闭时返回到任务书中
-                        if (NewBookController.Instance.BookType == BookType.None)
-                        {
-                            //显示主UI
-                            GameEntry.Event.Fire(this, EventId.Show_Main, null);
-                        }
-                    }
+        }
 
-                    uiForm.Logic.RevertSenceCameraRender();
-                }
-            }
-
-            //var datarow = GameEntry.Table.GetDataRow<LF.UiDataRow>(uiForm.Logic.UIKey);
-            //if (null != datarow && datarow.IsCaptureSceneScreenshot)
-            //    this.ReleaseSceneScreenCapture();
+        /// <summary>
+        /// 关闭所有
+        /// </summary>
+        public void ClosePopUpGroup()
+        {
+            
         }
 
         /// <summary>
@@ -992,13 +706,6 @@ namespace UnityGameFramework.Runtime
 
                 CloseUIForm(form.SerialId);
             }
-
-            //just for test 先这么测试下
-            if (isTest && groupName.Equals(LFDefines.UIGroup.Default))
-            {
-                //显示主UI
-                GameEntry.Event.Fire(this, EventId.Show_Main, null);
-            }
         }
 
         public void CloseByGroupFilterName(string groupName, List<string> names = null)
@@ -1014,15 +721,7 @@ namespace UnityGameFramework.Runtime
             }
             CloseByGroup(groupName, filter);
         }
-
-        /// <summary>
-        /// 关闭所有打开界面
-        /// </summary>
-        public void ClosePopUpGroup()
-        {
-            CloseByGroup(LFDefines.UIGroup.Default);
-            CloseByGroup(LFDefines.UIGroup.Dialog);
-        }
+        
         public void ClosePopUpGroup(List<string> list)
         {
             List<IUIForm> filter = new List<IUIForm>();
@@ -1037,35 +736,7 @@ namespace UnityGameFramework.Runtime
             CloseByGroup("Default",filter);
             CloseByGroup("Dialog", filter);
         }
-        public void CloseAllGroup ()
-        {
-            CloseByGroup (LFDefines.UIGroup.Default);
-            CloseByGroup (LFDefines.UIGroup.Dialog);
-            CloseByGroup (LFDefines.UIGroup.Global);
-        }
-
-        // 关闭除UIMain之外的所有UI窗口
-        public void CloseSceneGroupExcludeMain()
-        {
-            var group = GetUIGroup(LFDefines.UIGroup.Scene);
-            if (group == null)
-                return;
-            
-            var uiForms = group.GetAllUIForms();
-            foreach (var form in uiForms)
-            {
-                if (form.UIFormAssetName.Equals(GameEntry.UI.GetAssetName("UIMain")))
-                    continue;
-                CloseUIForm(form.SerialId);
-            }
-        }
         
-        public void CloseAllGroupExceptGlobal()
-        {           
-            CloseByGroup (LFDefines.UIGroup.Default);
-            CloseByGroup (LFDefines.UIGroup.Dialog);
-        }
-
         /// <summary>
         /// 关闭某组所有的界面
         /// </summary>
@@ -1135,140 +806,6 @@ namespace UnityGameFramework.Runtime
         {
             canvasGroup.interactable = enable;
         }
-
-        /// <summary>
-        /// 获得界面的资源
-        /// </summary>
-        /// <param name="uiKey"></param>
-        /// <returns></returns>
-        public string GetAssetName(string uiKey)
-        {
-            var datarow = GameEntry.Table.GetDataRow<LF.UiDataRow>(uiKey);
-            if (null == datarow)
-                return null;
-
-            return datarow.AssetName;
-        }
-
-        #region 截图(解决闪现天空盒的问题)
-
-        public void StartScreenCapture(Action callBack = null)
-        {
-            this.StartCoroutine(this.DoScreenCapture(() =>
-            {
-                callBack?.Invoke();
-            }));
-        }
-
-        public IEnumerator DoScreenCapture(Action callBack = null)
-        {
-            //等到帧结束，不然会报错
-            yield return YieldUtils.WaitForEndOfFrame ();
-
-            this.m_ScreenCapture.texture = ScreenCapture.CaptureScreenshotAsTexture();
-            this.m_ScreenCapture.gameObject.SetActiveEx(true);
-
-            yield return null;
-
-            callBack?.Invoke();
-        }
-
-        public void ReleaseScreenCapture()
-        {
-            this.m_ScreenCapture.gameObject.SetActiveEx(false);
-            GameObject.DestroyImmediate(this.m_ScreenCapture.texture);
-            this.m_ScreenCapture.texture = null;
-        }
-
-        #endregion
-
-        #region 场景截图
-
-        private RenderTexture rtScene = null;
-        private Camera currSceneCamera = null;
-
-        public void StartSceneScreenCapture(Action callBack = null)
-        {
-            // 获得当前场景相机
-            currSceneCamera = this.GetCurrentSceneCamera();
-            if (null == currSceneCamera)
-                return;
-
-            //创建一个RenderTexture对象
-            if (null == rtScene)
-                rtScene = new RenderTexture(Screen.width, Screen.height, 0);
-
-            //临时设置相关相机的targetTexture为rt, 并手动渲染相关相机
-            currSceneCamera.targetTexture = rtScene;
-            currSceneCamera.Render();
-
-            //激活这个rt, 并从中中读取像素
-            RenderTexture.active = rtScene;
-            Texture2D screenShot = new Texture2D(Screen.width, Screen.height, TextureFormat.RGBA32, false);
-            //注：这个时候，它是从RenderTexture.active中读取像素
-            screenShot.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0);
-            screenShot.Apply();
-
-            this.m_SceneBackground.texture = screenShot;
-            this.m_SceneBackground.gameObject.SetActiveEx(true);
-
-            callBack?.Invoke();
-        }
-
-        private Camera GetCurrentSceneCamera()
-        {
-            if (SceneContainer.Instance.IsInWorld())
-                return SceneContainer.Instance.WorldScene.GetCamera();
-            else if (SceneContainer.Instance.IsInBattleScene())
-                return SceneContainer.Instance.BattleScene.GetCamera();
-            else if (SceneContainer.Instance.IsInMainCity())
-                return SceneContainer.Instance.MainScene.GetCamera();
-            else if (GameEntry.SceneContainer.PveScene != null)
-                return GameEntry.SceneContainer.PveScene.GetCamera();
-
-            return null;
-        }
-
-        public void ReleaseSceneScreenCapture()
-        {
-            //重置相关参数，以使用camera继续在屏幕上显示
-            if(null != this.currSceneCamera)
-                this.currSceneCamera.targetTexture = null;
-
-            RenderTexture.active = null;
-            GameObject.Destroy(rtScene);
-            this.rtScene = null;
-
-            this.m_SceneBackground.gameObject.SetActiveEx(false);
-            GameObject.DestroyImmediate(this.m_SceneBackground.texture);
-            this.m_SceneBackground.texture = null;
-        }
-
-        #endregion
-
-        #region 支持鼠标滚轮和WASD键
-
-        /// <summary>
-        /// 是否支持鼠标滚轮和WASD按键，大部分ui需要屏蔽，有些不需要
-        /// </summary>
-        /// <returns></returns>
-        public bool IsSupportForPCBehaviour()
-        {
-            for (var i = 0; i < m_UIGroups.Length; i++)
-            {
-                var groupName = m_UIGroups[i].Name;
-                var group = m_UIManager.GetUIGroup(groupName);
-                if (group != null && group.UIFormCount > 0)
-                {
-                    if (!UIUtils.NeedSkipCheckForPC(group, groupName))
-                        return false;
-                }
-            }
-
-            return true;
-        }
-
-
-        #endregion
+        
     }
 }

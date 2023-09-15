@@ -79,7 +79,8 @@ namespace UnityGameFramework.Runtime
             {
                 obj.Recycle();
             }
-            ResourceUtils.UnloadAssetWithObject(uiFormAsset, true);
+            //LSZ
+            // ResourceUtils.UnloadAssetWithObject(uiFormAsset, true);
         }
     }
 }

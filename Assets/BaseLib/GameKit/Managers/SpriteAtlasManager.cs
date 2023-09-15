@@ -27,7 +27,8 @@ namespace GameKit.Base
             UnityEngine.U2D.SpriteAtlasManager.atlasRegistered -= OnAtlasRegistered;
             UnityEngine.U2D.SpriteAtlasManager.atlasRequested -= OnAtlasRequested;
 
-            ResourceManager.Instance.UnloadAssetWithObject(DefaultSprite);
+            //LSZ
+            // ResourceManager.Instance.UnloadAssetWithObject(DefaultSprite);
         }
 
         public void Awake()
@@ -39,84 +40,45 @@ namespace GameKit.Base
 
         public void PreloadSpriteAtlas(string atlasName, MemeryHold memeryHold = MemeryHold.Normal, System.Action<SpriteAtlas> action = null)
         {
-            RegistCallback(atlasName, action);
-            string assetBundle = GetAtlasBundleNameEx(atlasName);
-            ResourceManager.Instance.LoadAssetAsync<SpriteAtlas>(assetBundle, atlasName, (key, asset, err) =>
-            {
-                if (Log.IsLoad())
-                    Log.Info("+++! PreloadSpriteAtlas LoadAssetAsync ok {0}, err {1}", atlasName, err);
-
-                if (string.IsNullOrEmpty(err))
-                {
-                    SpriteAtlas atlas = asset as SpriteAtlas;
-                    Callback(atlasName, atlas);
-                }
-                else
-                {
-                    Callback(atlasName,null);
-                }
-            },  memeryHold);
+            //LSZ
+            // RegistCallback(atlasName, action);
+            // string assetBundle = GetAtlasBundleNameEx(atlasName);
+            // ResourceManager.Instance.LoadAssetAsync<SpriteAtlas>(assetBundle, atlasName, (key, asset, err) =>
+            // {
+            //     if (Log.IsLoad())
+            //         Log.Info("+++! PreloadSpriteAtlas LoadAssetAsync ok {0}, err {1}", atlasName, err);
+            //
+            //     if (string.IsNullOrEmpty(err))
+            //     {
+            //         SpriteAtlas atlas = asset as SpriteAtlas;
+            //         Callback(atlasName, atlas);
+            //     }
+            //     else
+            //     {
+            //         Callback(atlasName,null);
+            //     }
+            // },  memeryHold);
         }
-
-
-        private string GetAtlasBundleNameEx(string atlasName)
-        {
-            var datarow = GameEntry.Table.GetDataRow<LF.AtlasDataRow>(atlasName);
-            if (null != datarow)
-                return datarow.BundleName;
-
-            return null;
-        }
-
 
         private void LoadSpriteAtlas(string spriteName,System.Action<SpriteAtlas> action)
         {
             string assetBundle = string.Empty;
             string atlasName = string.Empty;
-            var spriteDataRow = GameEntry.Table.GetDataRow<LF.SpritesDataRow>(spriteName);
-            if(null != spriteDataRow)
-            {
-                if(spriteDataRow.LoadType == 0)
-                {
-                    Log.ReleaseError($"{spriteName}应该为AB加载模式而非图集加载模式, 请检查!");
-                    action?.Invoke(null);
-
-                    return;
-                }
-
-                atlasName = spriteDataRow.AtlasOrBundleName;
-                if(string.IsNullOrEmpty(atlasName))
-                {
-                    Log.ReleaseError($"{spriteName}在sprites配置中的图集名称为空, 请检查!");
-                    action?.Invoke(null);
-                    return;
-                }
-
-                var atlasDataRow = GameEntry.Table.GetDataRow<LF.AtlasDataRow>(atlasName);
-                if(null != atlasDataRow)
-                    assetBundle = atlasDataRow.BundleName;
-            }
-            else
-            {
-                Log.ReleaseError($"sprites配置文件中没有查到{spriteName}, 请检查!");
-                action?.Invoke(null);
-                return;
-            }
-
             RegistCallback(atlasName, action);
 
-            ResourceManager.Instance.LoadAssetAsync<SpriteAtlas>(assetBundle, atlasName, (key, asset, err) =>
-            {
-                if (string.IsNullOrEmpty(err))
-                {
-                    SpriteAtlas atlas = asset as SpriteAtlas;
-                    Callback(atlasName, atlas);
-                }
-                else
-                {
-                    Callback(atlasName,null);
-                }
-            });
+            //LSZ
+            // ResourceManager.Instance.LoadAssetAsync<SpriteAtlas>(assetBundle, atlasName, (key, asset, err) =>
+            // {
+            //     if (string.IsNullOrEmpty(err))
+            //     {
+            //         SpriteAtlas atlas = asset as SpriteAtlas;
+            //         Callback(atlasName, atlas);
+            //     }
+            //     else
+            //     {
+            //         Callback(atlasName,null);
+            //     }
+            // });
         }
 
 
