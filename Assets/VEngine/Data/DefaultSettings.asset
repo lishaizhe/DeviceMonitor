@@ -21,7 +21,8 @@ MonoBehaviour:
   - .meta
   bundleExtension: .bundle
   version: 0
-  manifests: []
+  manifests:
+  - {fileID: 11400000, guid: f7dbdccd2c9f34f8fb9f077a6d602c60, type: 2}
   bkgroundManifest: {fileID: 0}
   packageResManifest: {fileID: 0}
   playerGroups: []

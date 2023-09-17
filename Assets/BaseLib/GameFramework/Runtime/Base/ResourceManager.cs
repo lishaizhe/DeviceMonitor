@@ -267,6 +267,11 @@ public class ResourceManager
         return VEngine.Asset.LoadAsync(path, type);
     }
 
+    public VEngine.Asset LoadAssetAsync<T>(string path, Action<VEngine.Asset> complete = null)
+    {
+        return VEngine.Asset.LoadAsync<T>(path, complete);
+    }
+    
     public void PreloadAsset(string path, Type type, PreloadType preloadType = PreloadType.Cache)
     {
         var expiredTime = preloadType == PreloadType.Cache ? Time.realtimeSinceStartup + CacheTime : float.MaxValue;

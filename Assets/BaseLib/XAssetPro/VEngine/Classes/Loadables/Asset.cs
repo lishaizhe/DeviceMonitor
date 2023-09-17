@@ -118,6 +118,11 @@ namespace VEngine
             return LoadInternal(path, type, false, completed);
         }
 
+        public static Asset LoadAsync<T>(string path, Action<Asset> completed = null)
+        {
+            return LoadAsync(path, typeof(T), completed);
+        }
+
         /// <summary>
         ///     同步加载资源，此接口不支持直接从服务器下载资源。
         /// </summary>
