@@ -1,28 +1,4 @@
-﻿//------------------------------------------------------------
-// Game Framework v3.x
-// Copyright © 2013-2018 Jiang Yin. All rights reserved.
-// Homepage: http://gameframework.cn/
-// Feedback: mailto:jiangyin@gameframework.cn
-//------------------------------------------------------------
-
-/***
- * TODO: 优化一下那些重载
- * 这个脚本里面参数是 int 重载完全没意义
- * 最后调用 string.format 还是会将 int 装箱啊。。。
- * 虽然影响不大，有时间改改吧。太多了。。。
- *
- * 2021.12.06 完成 TODO
- * 终于把那些垃圾代码干掉了。。。
- *
- * 实现逻辑是使用编译条件属性
- * 将方法打上 Conditional("DEBUG_LOG")
- * 在打包脚本上里 添加/删除 Symbol 来决定是否编译相关代码
- * 这样在 Release 发布包上就可以去除编译对应代码
- * 完全去除 Log
- * 这样做相对于用 Log.Write 的方式更好的是编译压根不会编译那些 Log 方法调用
- * 所以就不会编译其中的字符串常量，也不会编译一些方法中的字符串拼接逻辑
- * 节省 编译期 和 运行时 字符串 的内存占用
- ***/
+﻿//
 
 using System;
 using System.Diagnostics;

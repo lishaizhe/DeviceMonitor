@@ -1,9 +1,4 @@
-﻿//------------------------------------------------------------
-// Game Framework v3.x
-// Copyright © 2013-2018 Jiang Yin. All rights reserved.
-// Homepage: http://gameframework.cn/
-// Feedback: mailto:jiangyin@gameframework.cn
-//------------------------------------------------------------
+﻿//
 
 //
 // 这个类问题很多，且有GC，本人因为今天加班，所以把这个代码重新处理了一下!

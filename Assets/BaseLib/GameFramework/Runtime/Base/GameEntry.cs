@@ -1,21 +1,4 @@
-﻿//------------------------------------------------------------
-// Game Framework v3.x
-// Copyright © 2013-2018 Jiang Yin. All rights reserved.
-// Homepage: http://gameframework.cn/
-// Feedback: mailto:jiangyin@gameframework.cn
-//
-// GameFrameworkComponent其实意义不大，目前的实现是放到了一个LinkedList，
-// 但是每次访问都涉及到遍历，实属消耗无谓的浪费。而且还是由底层去提供这种服务，那就更不可取。
-// 第一是游戏内的组件定义就比较模糊，任何方便的全局类都可以定性为组件
-// 第二是如果有大量的组件Register进去，那么再Get的时候效率就会成为潜在问题。
-//     所以这里使用一个static变量去再缓存一遍数据，感觉非常不和谐。。。。。
-// 可取的方式应该是定义FrameworkEntry，然后用户自己再去定义一个XXGameEntry : FrameworkEntry
-// 通过继承，方便访问Framework提供的Component即可。
-//
-// 任何想给游戏做Framework的想法都是不成熟的，毕竟游戏是服务娱乐行业，定制化特性太正常了。
-// 所以应该定性为BaseLib(基础类库)或者Kit(套件)。只给用户提供服务，不给用户提供Box(界限)。
-//------------------------------------------------------------
-
+﻿
 using GameFramework;
 using GameKit.Base;
 using System;
@@ -112,6 +95,17 @@ namespace UnityGameFramework.Runtime
                 if (settingProxy == null)
                     settingProxy = SettingProxy.Instance; //ApplicationFacade.Instance.RetrieveProxy(SettingProxy.NAME) as SettingProxy;
                 return settingProxy;
+            }
+        }
+        
+        static private ResourceManager _resourceManager;
+        public static ResourceManager Resource
+        {
+            get
+            {
+                if (_resourceManager == null)
+                    _resourceManager = new ResourceManager();
+                return _resourceManager;
             }
         }
 

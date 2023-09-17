@@ -1,10 +1,4 @@
-﻿//------------------------------------------------------------
-// Game Framework v3.x
-// Copyright © 2013-2018 Jiang Yin. All rights reserved.
-// Homepage: http://gameframework.cn/
-// Feedback: mailto:jiangyin@gameframework.cn
-//------------------------------------------------------------
-
+﻿
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -199,6 +193,21 @@ public static class UnityExtension
     public static float ToFloat(this object value)
     {
         return ToSingle(value);
+    }
+    
+    // ReadOnlySpan => ToULong
+    public static ulong ToULong(this ReadOnlySpan<char> str)
+    {
+        ulong u = Strtoul_CSharp.strtoul(str);
+        
+// #if UNITY_EDITOR
+//         ulong ttt = Convert.ToUInt64(str.ToString());
+//         if (ttt != u)
+//         {
+//             Log.Error("BUGBUGBUG! ToULong() not same!");
+//         }
+// #endif
+        return u;
     }
 
     public static bool IsZero(this float value)

@@ -37,29 +37,6 @@ namespace GameKit.Base
             UnityEngine.U2D.SpriteAtlasManager.atlasRequested += OnAtlasRequested;
         }
 
-
-        public void PreloadSpriteAtlas(string atlasName, MemeryHold memeryHold = MemeryHold.Normal, System.Action<SpriteAtlas> action = null)
-        {
-            //LSZ
-            // RegistCallback(atlasName, action);
-            // string assetBundle = GetAtlasBundleNameEx(atlasName);
-            // ResourceManager.Instance.LoadAssetAsync<SpriteAtlas>(assetBundle, atlasName, (key, asset, err) =>
-            // {
-            //     if (Log.IsLoad())
-            //         Log.Info("+++! PreloadSpriteAtlas LoadAssetAsync ok {0}, err {1}", atlasName, err);
-            //
-            //     if (string.IsNullOrEmpty(err))
-            //     {
-            //         SpriteAtlas atlas = asset as SpriteAtlas;
-            //         Callback(atlasName, atlas);
-            //     }
-            //     else
-            //     {
-            //         Callback(atlasName,null);
-            //     }
-            // },  memeryHold);
-        }
-
         private void LoadSpriteAtlas(string spriteName,System.Action<SpriteAtlas> action)
         {
             string assetBundle = string.Empty;
@@ -128,7 +105,7 @@ namespace GameKit.Base
         private void OnAtlasRequested(string atlasName, System.Action<SpriteAtlas> action)
         {
             //Debugger.LogWarningFormat("OnAtlasRequested: {0}", atlasName);
-            PreloadSpriteAtlas(atlasName,MemeryHold.Normal, action);
+            // PreloadSpriteAtlas(atlasName,MemeryHold.Normal, action);
         }
 
         private void Callback(string key, SpriteAtlas spriteAtlas)
