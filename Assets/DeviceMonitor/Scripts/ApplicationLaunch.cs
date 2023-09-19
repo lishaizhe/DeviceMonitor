@@ -22,12 +22,14 @@ public class ApplicationLaunch : MonoBehaviour
                 Logger.E("初始化XAsset失败");
                 return;
             }
-
-            // GameEntry.UI.OpenUIForm("");
+            
             Logger.I("初始化成功");
             GameEntry.Resource.LoadAssetAsync<GameObject>(EntityAssets.CUBE, asset =>
             {
-                
+                LoadingParam param = new LoadingParam();
+                param.num1 = 3;
+                param.num2 = 5;
+                GameEntry.UI.OpenUIForm(EntityAssets.UILoading, "Default", param);
             });
         });
     }

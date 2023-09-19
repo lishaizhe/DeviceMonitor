@@ -21,12 +21,6 @@ namespace UnityGameFramework.Runtime
     public sealed partial class UIComponent : GameFrameworkComponent
     {
         
-#if UNITY_IOS        
-        [DllImport("__Internal")]
-        static extern int isIphoneX();
-#endif
-        
-
         private IUIManager m_UIManager = null;
         private EventComponent m_EventComponent = null;
 
@@ -43,19 +37,8 @@ namespace UnityGameFramework.Runtime
 
         [SerializeField]
         private Transform m_InstanceRoot = null;
-
-        // 截图(场景截图作为背景图)
-        [SerializeField] private RawImage m_SceneBackground;
-
-        // 截图(为了解决切换场景时闪一下天空盒的问题,此时会截屏覆盖在主界面上)
-        [SerializeField] private RawImage m_ScreenCapture;
-
-        [Header("GroupRoot节点和iphoneX适配有关，不可轻易改动")]
+        
         [SerializeField] public Transform m_GroupRoot = null;
-        [SerializeField] private GameObject m_IphoneXCover = null;
-        [SerializeField] private bool m_TestIphoneX;
-
-
 
         [SerializeField]
         private string m_UIFormHelperTypeName = "UnityGameFramework.Runtime.DefaultUIFormHelper";
@@ -79,26 +62,6 @@ namespace UnityGameFramework.Runtime
         public List<string> CacheUINames = new List<string>();
 
 // #endif
-
-
-        public bool TestIphoneX
-        {
-            get => m_TestIphoneX;
-            set
-            {
-                m_TestIphoneX = value;
-#if UNITY_EDITOR
-                //ResizeGroupRoot
-                var rt = m_GroupRoot.GetComponent<RectTransform>();
-                var offset = GetAdaptOffsetX();
-                rt.offsetMin = new Vector2(offset, 0);
-                rt.offsetMax = new Vector2(-offset, 0);
-                
-                // if(m_IphoneXCover) m_IphoneXCover.gameObject.SetActiveEx(TestIphoneX);
-                // GameEntry.Event.Fire(this, EventId.OnTestIPhoneXChanged);
-#endif
-            }
-        }
 
         public Canvas UICanvas
         {
@@ -356,16 +319,7 @@ namespace UnityGameFramework.Runtime
         /// <returns>左右边距</returns>
         public float GetAdaptOffsetX()
         {
-            #if UNITY_EDITOR
-                return m_TestIphoneX ? 50 : 0;
-            #elif UNITY_ANDROID
-                //todo:
-                return 0;
-            #elif UNITY_IOS
-                return isIphoneX() == 1 ? 50 : 0; 
-            #else
-                return 0;
-            #endif
+            return 0;
         }
 
 

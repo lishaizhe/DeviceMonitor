@@ -458,11 +458,7 @@ namespace GameFramework.UI
 		{
 			return OpenUIForm(uiFormAssetName, uiGroupName, pauseCoveredUIForm, userData, null, null);
 		}
-
-		//public int OpenUIForm(string uiKey, string uiFormAssetName, string uiGroupName, bool pauseCoveredUIForm, object userData);
-		//{
-
-		//}
+		
 
 		/// <summary>
 		/// 打开界面。
@@ -503,21 +499,21 @@ namespace GameFramework.UI
             m_UIFormAssetNamesBeingLoaded.Add(uiFormAssetName);
             uiGroup.SetUIFormCount(uiGroup.UIFormCount + 1);
      
-            //LSZ
-    //         GameKit.Base.ResourceManager.Instance.LoadAssetAsync<GameObject>(uiFormAssetName,  ( key, asset, err ) =>
-    //         {
-				// string uiKey = Path.GetFileNameWithoutExtension(uiFormAssetName);
-    //             var info = new OpenUIFormInfo(serialId, uiKey, uiGroup, pauseCoveredUIForm, userData, OnComplete, args);
-    //             if (string.IsNullOrEmpty(err) )
-    //             {
-    //                 LoadUIFormSuccessCallback(uiFormAssetName, asset, info);
-    //             }
-    //             else
-    //             {
-    //                 LoadUIFormFailureCallback(uiFormAssetName,  err,info );
-    //             }
-    //
-    //         });
+		    GameEntry.Resource.LoadAssetAsync<GameObject>(uiFormAssetName, asset =>
+		    {
+			    string uiKey = Path.GetFileNameWithoutExtension(uiFormAssetName);
+			    var info = new OpenUIFormInfo(serialId, uiKey, uiGroup, pauseCoveredUIForm, userData, OnComplete, args);
+			    if (string.IsNullOrEmpty(asset.error) )
+			    {
+				    LoadUIFormSuccessCallback(uiFormAssetName, asset.asset, info);
+			    }
+			    else
+			    {
+				    LoadUIFormFailureCallback(uiFormAssetName,  asset.error,info );
+			    }
+		    });
+    
+    
 
             return serialId;
         }

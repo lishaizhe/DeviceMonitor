@@ -4,6 +4,7 @@ using BaseLib.GameFramework.Runtime.UI;
 using GameFramework;
 using GameFramework.UI;
 using UnityEngine;
+using Logger = VEngine.Logger;
 
 
 //#if ODIN_INSPECTOR
@@ -124,9 +125,7 @@ namespace UnityGameFramework.Runtime
         /// <param name="userData">用户自定义数据。</param>
         public void OnInit(int serialId, string uiKey, string uiFormAssetName, IUIGroup uiGroup, bool pauseCoveredUIForm, object userData, params object[] backArgs)
         {
-          
-
-			rectTransform = GetComponent<RectTransform>();
+            rectTransform = GetComponent<RectTransform>();
 			m_SerialId = serialId;
             m_UIFormAssetName = uiFormAssetName;
 
@@ -153,7 +152,7 @@ namespace UnityGameFramework.Runtime
             m_UIFormLogic = GetComponent<UIFormLogic>();
             if (m_UIFormLogic == null)
             {
-                Log.Error("UI form '{0}' can not get UI form logic.", uiFormAssetName);
+                Logger.E("UI form '{0}' can not get UI form logic.", uiFormAssetName);
                 return;
             }
             if ( backArgs != null )
