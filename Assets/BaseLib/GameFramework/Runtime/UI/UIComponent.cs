@@ -724,28 +724,28 @@ namespace UnityGameFramework.Runtime
 
         private void OnOpenUIFormSuccess(object sender, OpenUIFormSuccessEventArgs e)
         {
-            if (m_EnableOpenUIFormSuccessEvent)
-            {
-                m_EventComponent.Fire(this, e);
-            }
+            // if (m_EnableOpenUIFormSuccessEvent)
+            // {
+            //     m_EventComponent.Fire(this, e);
+            // }
         }
 
         private void OnOpenUIFormFailure(object sender, OpenUIFormFailureEventArgs e)
         {
             //Log.Warning("Open UI form failure, asset name '{0}', UI group name '{1}', pause covered UI form '{2}', error message '{3}'.", e.UIFormAssetName, e.UIGroupName, e.PauseCoveredUIForm.ToString(), e.ErrorMessage);
-            Log.ReleaseWarning($"Open UI form failure, asset name : {e.UIFormAssetName}', UI group name :{e.UIGroupName}, error message : {e.ErrorMessage}.");
-            if (m_EnableOpenUIFormFailureEvent)
-            {
-                m_EventComponent.Fire(this, e);
-            }
+            // Log.ReleaseWarning($"Open UI form failure, asset name : {e.UIFormAssetName}', UI group name :{e.UIGroupName}, error message : {e.ErrorMessage}.");
+            // if (m_EnableOpenUIFormFailureEvent)
+            // {
+            //     m_EventComponent.Fire(this, e);
+            // }
         }
 
         private void OnCloseUIFormComplete(object sender, CloseUIFormCompleteEventArgs e)
         {
-            if (m_EnableCloseUIFormCompleteEvent)
-            {
-                m_EventComponent.Fire(this, e);
-            }
+            // if (m_EnableCloseUIFormCompleteEvent)
+            // {
+            //     m_EventComponent.Fire(this, e);
+            // }
         }
         /// <summary>
         /// 是否屏蔽主界面点击

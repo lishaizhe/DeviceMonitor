@@ -15,11 +15,11 @@ MonoBehaviour:
   bundleMode: 2
   manifest: {fileID: 11400000, guid: f7dbdccd2c9f34f8fb9f077a6d602c60, type: 2}
   assets:
-  - _target: {fileID: 102900000, guid: b004b15addc264184993928bff26a6a4, type: 3}
+  - _target: {fileID: 102900000, guid: 5e50b825cc1e0ff4580392bdcb22b09b, type: 3}
     label: 
     dependencies: []
     readOnly: 0
-    path: Assets/DeviceMonitor/Resource/Prefab
+    path: Assets/DeviceMonitor/Fonts
     rootPath: 
     parentGroup: {fileID: 11400000}
     bundle: .bundle
