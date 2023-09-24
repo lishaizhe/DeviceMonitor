@@ -142,6 +142,7 @@ namespace VEngine.Editor
             Debug.Log("Set Incremental ok");
         }
         
+        //加载本地bundle
         [MenuItem("XASSET/Preload")]
         public static void Preload()
         {
@@ -149,15 +150,40 @@ namespace VEngine.Editor
             BuildScript.BuildBundles();
             Settings.GetDefaultSettings().scriptPlayMode = ScriptPlayMode.Preload;
             Settings.GetDefaultSettings().Save();
+            SetBtnSelect(true, false);
             Debug.Log("Set Preload ok");
         }
-        
+
+        [MenuItem("XASSET/Preload", true)]
+        public static bool IsCanSelectPreload()
+        {
+            bool result = Settings.GetDefaultSettings().scriptPlayMode == ScriptPlayMode.Simulation;
+            SetBtnSelect(!result, result);
+            return result;
+        }
+
         [MenuItem("XASSET/Simulation")]
         public static void Simulation()
         {
             Settings.GetDefaultSettings().scriptPlayMode = ScriptPlayMode.Simulation;
             Settings.GetDefaultSettings().Save();
+            SetBtnSelect(false, true);
             Debug.Log("Set Simulation ok");
         }
+        
+        [MenuItem("XASSET/Simulation", true)]
+        public static bool IsCanSelectSimulation()
+        {
+            bool result = Settings.GetDefaultSettings().scriptPlayMode == ScriptPlayMode.Preload;
+            SetBtnSelect(result, !result);
+            return result;
+        }
+
+        public static void SetBtnSelect(bool preload, bool simulation)
+        {
+            Menu.SetChecked("XASSET/Simulation", simulation);
+            Menu.SetChecked("XASSET/Preload", preload);
+        }
+
     }
 }

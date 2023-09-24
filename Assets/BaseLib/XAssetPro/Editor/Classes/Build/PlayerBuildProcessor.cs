@@ -14,13 +14,13 @@ namespace VEngine.Editor
 
         public void OnPostprocessBuild(BuildReport report)
         {
-            var directory = EditorUtility.BuildPlayerDataPath;
-            if (!Directory.Exists(directory)) return;
-            Directory.Delete(directory, true);
-            if (Directory.GetFiles(Application.streamingAssetsPath).Length == 0)
-            {
-                Directory.Delete(Application.streamingAssetsPath);
-            }
+            // var directory = EditorUtility.BuildPlayerDataPath;
+            // if (!Directory.Exists(directory)) return;
+            // Directory.Delete(directory, true);
+            // if (Directory.GetFiles(Application.streamingAssetsPath).Length == 0)
+            // {
+            //     Directory.Delete(Application.streamingAssetsPath);
+            // }
         }
 
         public void OnPreprocessBuild(BuildReport report)

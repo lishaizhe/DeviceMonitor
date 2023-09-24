@@ -20,7 +20,7 @@ public class VueData:MonoBehaviour
     public static extern void SetWindowMax(bool isMax);
 
 #endif
-#if UNITY_EDITOR
+
     private static string item;
 
     public static void UnityDataSend(string t, string i)
@@ -54,17 +54,16 @@ public class VueData:MonoBehaviour
 
     public static void SetWindowMax(bool isMax)
     {
-        Debug.Log(isMax?"×î´ó»¯": "×îÐ¡»¯");
+        Debug.Log(isMax?"ï¿½ï¿½ï¿½": "ï¿½ï¿½Ð¡ï¿½ï¿½");
     }
-#endif
 
-    #region 1.»ñµÃÄ£°åÐÅÏ¢
-    // GetTemplatesSendºÍGetTemplatesRecvÅäºÏÊ¹ÓÃ
+    #region 1.ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½Ï¢
+    // GetTemplatesSendï¿½ï¿½GetTemplatesRecvï¿½ï¿½ï¿½Ê¹ï¿½ï¿½
 
     /// <summary>
-    /// »ñµÃÖ¸¶¨Ò³ÃæÄ£°åÐÅÏ¢
+    /// ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½Ò³ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½Ï¢
     /// </summary>
-    /// <param name="pageName">Ò³ÃæÃû³Æ(ÊµÊ±Êý¾Ý)</param>
+    /// <param name="pageName">Ò³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(ÊµÊ±ï¿½ï¿½ï¿½ï¿½)</param>
     /// <returns></returns>
     public static void GetTemplateSend(string pageName)
     {
@@ -72,13 +71,13 @@ public class VueData:MonoBehaviour
         var item = new TemplateItem();
         item.pagename = pageName;
         var send = JsonConvert.SerializeObject(item);
-        Debug.Log($"GetTemplateSend ·¢ËÍ£º{send}");
+        Debug.Log($"GetTemplateSend ï¿½ï¿½ï¿½Í£ï¿½{send}");
         UnityDataSend(type, send);
     }
     public static Template[] GetTemplateRecv()
     {
         var recv = UnityDataRecv("GetTemplate");
-        Debug.Log($"GetTemplateRecv ½ÓÊÕ£º{recv}");
+        Debug.Log($"GetTemplateRecv ï¿½ï¿½ï¿½Õ£ï¿½{recv}");
         Template[] result;
         try
         {
@@ -88,17 +87,17 @@ public class VueData:MonoBehaviour
         {
             result = null;
         }
-        Debug.Log($"GetTemplateRecv ·´ÐòÁÐ»¯£º{result == null}|{result.Length}");
+        Debug.Log($"GetTemplateRecv ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½{result == null}|{result.Length}");
         return result;
     }
     #endregion
 
-    #region 2.»ñµÃ¶ÔÓ¦Ä£°åÄÚÈÝ
+    #region 2.ï¿½ï¿½Ã¶ï¿½Ó¦Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// <summary>
-    /// »ñµÃÖ¸¶¨Ä£°åÐÅÏ¢
+    /// ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½Ï¢
     /// </summary>
-    /// <param name="pageName">Ò³ÃæÃû³Æ</param>
-    /// <param name="templateid">Ä£°åid</param>
+    /// <param name="pageName">Ò³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</param>
+    /// <param name="templateid">Ä£ï¿½ï¿½id</param>
     /// <returns></returns>
     public static void GetTemplateDataSend(string pageName, string templateid)
     {
@@ -107,13 +106,13 @@ public class VueData:MonoBehaviour
         item.pagename = pageName;
         item.templateid = templateid;
         var send = JsonConvert.SerializeObject(item);
-        Debug.Log($"GetTemplateDataSend ·¢ËÍ£º{send}");
+        Debug.Log($"GetTemplateDataSend ï¿½ï¿½ï¿½Í£ï¿½{send}");
         UnityDataSend(type, send);
     }
     public static TemplateData[] GetTemplateDataRecv()
     {
         var recv = UnityDataRecv("GetTemplateData");
-        Debug.Log($"GetTemplateDataRecv ½ÓÊÕ£º{recv}");
+        Debug.Log($"GetTemplateDataRecv ï¿½ï¿½ï¿½Õ£ï¿½{recv}");
         TemplateData[] result;
         try
         {
@@ -123,14 +122,14 @@ public class VueData:MonoBehaviour
         {
             result = null;
         }
-        Debug.Log($"GetTemplateDataRecv ·´ÐòÁÐ»¯£º{result == null}|{result?.Length}");
+        Debug.Log($"GetTemplateDataRecv ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½{result == null}|{result?.Length}");
         return result;
     }
     #endregion
 
-    #region 3.»ñµÃ¶ÔÓ¦Ä£°åÖµ
+    #region 3.ï¿½ï¿½Ã¶ï¿½Ó¦Ä£ï¿½ï¿½Öµ
     /// <summary>
-    /// »ñµÃÖ¸¶¨Ä£°åÖµÐÅÏ¢
+    /// ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½Ä£ï¿½ï¿½Öµï¿½ï¿½Ï¢
     /// </summary>
     /// <param name="pageName"></param>
     /// <param name="templateid"></param>
@@ -143,12 +142,12 @@ public class VueData:MonoBehaviour
         item.templateid = templateid;
         var send = JsonConvert.SerializeObject(item);
         UnityDataSend(type, send);
-        Debug.Log($"GetTemplateValueSend ·¢ËÍ£º{send}");
+        Debug.Log($"GetTemplateValueSend ï¿½ï¿½ï¿½Í£ï¿½{send}");
     }
     public static string[] GetTemplateValueRecv()
     {
         var recv = UnityDataRecv("GetTemplateValue");
-        Debug.Log($"GetTemplateValueRecv ½ÓÊÕ£º{recv}");
+        Debug.Log($"GetTemplateValueRecv ï¿½ï¿½ï¿½Õ£ï¿½{recv}");
         string[] result;
         try
         {
@@ -156,18 +155,18 @@ public class VueData:MonoBehaviour
         }
         catch
         {
-            Debug.Log("GetTemplateValueRecv ÐòÁÐ»¯Ê§°Ü");
+            Debug.Log("GetTemplateValueRecv ï¿½ï¿½ï¿½Ð»ï¿½Ê§ï¿½ï¿½");
             result = null;
         }
-        Debug.Log($"GetTemplateValueRecv ·´ÐòÁÐ»¯£º{result == null}|{result.Length}");
+        Debug.Log($"GetTemplateValueRecv ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½{result == null}|{result.Length}");
         return result;
     }
     #endregion
 
 
-    #region 4.ÉèÖÃÉè±¸²ÎÊý
+    #region 4.ï¿½ï¿½ï¿½ï¿½ï¿½è±¸ï¿½ï¿½ï¿½ï¿½
     /// <summary>
-    /// ÉèÖÃÖ¸¶¨Ä£°åÐÅÏ¢
+    /// ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½Ï¢
     /// </summary>
     /// <param name="item"></param>
     /// <returns></returns>
@@ -183,9 +182,9 @@ public class VueData:MonoBehaviour
     }
     #endregion
 
-    #region 5.»ñÈ¡ÊµÊ±ÊÂ¼þÐÅÏ¢
+    #region 5.ï¿½ï¿½È¡ÊµÊ±ï¿½Â¼ï¿½ï¿½ï¿½Ï¢
     /// <summary>
-    /// »ñÈ¡ÊµÊ±ÊÂ¼þÐÅÏ¢
+    /// ï¿½ï¿½È¡ÊµÊ±ï¿½Â¼ï¿½ï¿½ï¿½Ï¢
     /// </summary>
     /// <param name="item"></param>
     /// <returns></returns>
@@ -193,13 +192,13 @@ public class VueData:MonoBehaviour
     {
         var type = "GetTemplateEvent";
         var send = JsonConvert.SerializeObject(item);
-        Debug.Log($"GetTemplateValueSend ·¢ËÍ£º{send}");
+        Debug.Log($"GetTemplateValueSend ï¿½ï¿½ï¿½Í£ï¿½{send}");
         UnityDataSend(type, send);
     }
     public static TemplateEvent[] GetTemplateEventRecv()
     {
         var recv = UnityDataRecv("GetTemplateEvent");
-        Debug.Log($"GetTemplateEventRecv ½ÓÊÕ£º{recv}");
+        Debug.Log($"GetTemplateEventRecv ï¿½ï¿½ï¿½Õ£ï¿½{recv}");
         TemplateEvent[] result;
         try
         {
@@ -207,17 +206,17 @@ public class VueData:MonoBehaviour
         }
         catch
         {
-            Debug.Log("GetTemplateEventRecv ÐòÁÐ»¯Ê§°Ü");
+            Debug.Log("GetTemplateEventRecv ï¿½ï¿½ï¿½Ð»ï¿½Ê§ï¿½ï¿½");
             result = null;
         }
-        Debug.Log($"GetTemplateEventRecv ·´ÐòÁÐ»¯£º{result == null}|{result.Length}");
+        Debug.Log($"GetTemplateEventRecv ï¿½ï¿½ï¿½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½{result == null}|{result.Length}");
         return result;
     }
     #endregion
 
-    #region 6.È·ÈÏÊÂ¼þ
+    #region 6.È·ï¿½ï¿½ï¿½Â¼ï¿½
     /// <summary>
-    /// È·ÈÏÊµÊ±ÊÂ¼þ
+    /// È·ï¿½ï¿½ÊµÊ±ï¿½Â¼ï¿½
     /// </summary>
     /// <param name="item"></param>
     /// <returns></returns>
@@ -225,20 +224,20 @@ public class VueData:MonoBehaviour
     {
         var type = "SetTemplateEvent";
         var send = JsonConvert.SerializeObject(item);
-        Debug.Log($"SetTemplateEventSend ·¢ËÍ£º{send}");
+        Debug.Log($"SetTemplateEventSend ï¿½ï¿½ï¿½Í£ï¿½{send}");
         UnityDataSend(type, send);
     }
     public static string SetTemplateEventRecv()
     {
         var result = UnityDataRecv("SetTemplateEvent");
-        Debug.Log($"SetTemplateEventRecv ½á¹û£º{result}");
+        Debug.Log($"SetTemplateEventRecv ï¿½ï¿½ï¿½ï¿½ï¿½{result}");
         return result;
     }
     #endregion
 
-    #region 7.»ñµÃµÇÂ¼ÐÅÏ¢
+    #region 7.ï¿½ï¿½Ãµï¿½Â¼ï¿½ï¿½Ï¢
     /// <summary>
-    /// »ñµÃµÇÂ¼ÕßÃû³Æ
+    /// ï¿½ï¿½Ãµï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public static void GetUserNameSend()
     {
@@ -256,13 +255,13 @@ public class VueData:MonoBehaviour
         {
             data = null;
         }
-        return data?.name ?? "ÇëµÇÂ¼!";
+        return data?.name ?? "ï¿½ï¿½ï¿½Â¼!";
     }
     #endregion
 
 
     /// <summary>
-    /// ÍË³öµÇÂ¼
+    /// ï¿½Ë³ï¿½ï¿½ï¿½Â¼
     /// </summary>
     public static void SetLogout()
     {
@@ -270,9 +269,9 @@ public class VueData:MonoBehaviour
     }
 
     /// <summary>
-    /// »ñµÃÊÂ¼þÉùÒôµØÖ·
+    /// ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·
     /// </summary>
-    /// <returns>ÉùÒôµØÖ·</returns>
+    /// <returns>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·</returns>
     public static string GetEventSound()
     {
         var type = "EventSound";
@@ -282,11 +281,11 @@ public class VueData:MonoBehaviour
 
 
     /// <summary>
-    /// ´ÓJSONÎÄ¼þ»ñµÃÊý¾Ý
+    /// ï¿½ï¿½JSONï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <param name="filePath">StreamingAssetsÎÄ¼þ¼ÐÏÂÎÄ¼þÂ·¾¶,
-    /// ÀýÈç£º/devicesInfo/xxx.json</param>
+    /// <param name="filePath">StreamingAssetsï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½Â·ï¿½ï¿½,
+    /// ï¿½ï¿½ï¿½ç£º/devicesInfo/xxx.json</param>
     /// <returns></returns>
     public static T TestGetDataFromJson<T>(string filePath)
     {

@@ -7,7 +7,8 @@
 /[Bb]undlesCache/
 /Assets/StreamingAssets*
 /Assets/AssetStoreTools*
-
+/AssetBundles
+/Product
 # Visual Studio 2015 cache directory
 /.vs/
 

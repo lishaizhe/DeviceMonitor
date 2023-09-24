@@ -23,4 +23,44 @@ MonoBehaviour:
     rootPath: 
     parentGroup: {fileID: 11400000}
     bundle: .bundle
+  - _target: {fileID: 102900000, guid: db66b3f317b484f2e9e7eb55940185f4, type: 3}
+    label: 
+    dependencies: []
+    readOnly: 0
+    path: Assets/DeviceMonitor/Resource/Atlas
+    rootPath: 
+    parentGroup: {fileID: 11400000}
+    bundle: .bundle
+  - _target: {fileID: 102900000, guid: 27733c308acc92647a30b613f4c3c527, type: 3}
+    label: 
+    dependencies: []
+    readOnly: 0
+    path: Assets/DeviceMonitor/Resource/Material
+    rootPath: 
+    parentGroup: {fileID: 11400000}
+    bundle: .bundle
+  - _target: {fileID: 102900000, guid: b004b15addc264184993928bff26a6a4, type: 3}
+    label: 
+    dependencies: []
+    readOnly: 0
+    path: Assets/DeviceMonitor/Resource/Prefab
+    rootPath: 
+    parentGroup: {fileID: 11400000}
+    bundle: .bundle
+  - _target: {fileID: 102900000, guid: d31683a5f83534713bd6e85d002cec3f, type: 3}
+    label: 
+    dependencies: []
+    readOnly: 0
+    path: Assets/DeviceMonitor/Resource/Sprite
+    rootPath: 
+    parentGroup: {fileID: 11400000}
+    bundle: devicemonitormanifest_newbundledgroup_assets_devicemonitor_resource.bundle
+  - _target: {fileID: 102900000, guid: 29a4de7a16c8e0a40bba97ef796c8308, type: 3}
+    label: 
+    dependencies: []
+    readOnly: 0
+    path: Assets/DeviceMonitor/Resource/Texture
+    rootPath: 
+    parentGroup: {fileID: 11400000}
+    bundle: .bundle
   readOnly: 0

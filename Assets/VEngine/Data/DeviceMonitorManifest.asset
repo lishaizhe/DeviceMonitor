@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   groups:
   - {fileID: 11400000, guid: 8b05019580339403791f14c95d1db288, type: 2}
+  - {fileID: 11400000, guid: f12997bd79a784c6d85b4f71434aa012, type: 2}
   size: 0
   settings: {fileID: 11400000, guid: 0a28dd07edadb49b5870bd96c9d52353, type: 2}
   buildAssetBundleOptions: 256

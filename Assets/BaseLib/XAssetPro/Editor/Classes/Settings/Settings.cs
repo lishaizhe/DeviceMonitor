@@ -164,8 +164,6 @@ namespace VEngine.Editor
             }
             
             config.manifests = manifests.ConvertAll(m => m.name);
-            config.bkgroundManifest = bkgroundManifest.name;
-            config.packageResManifest = packageResManifest.name;
             EditorUtility.SaveAsset(config);
         }
 
