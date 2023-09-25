@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public struct LoadingParam
 {
@@ -10,11 +12,14 @@ public struct LoadingParam
 
 public class UILoadingView : BaseUIForm
 {
+    [SerializeField] private TMP_InputField m_inputUserName;
+    [SerializeField] private TMP_InputField m_inputPassword;
+    [SerializeField] private Button m_btnLogin;
     protected internal override void OnOpen(object userData)
     {
         base.OnOpen(userData);
         LoadingParam param = (LoadingParam)userData;
-        Debug.Log($"****param: {param.num1} - {param.num2}");
+        m_inputUserName.
     }
 
     protected internal override void OnClose(object userData)

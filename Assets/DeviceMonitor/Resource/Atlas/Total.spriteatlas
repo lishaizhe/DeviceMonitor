@@ -31,7 +31,7 @@ SpriteAtlas:
     variantMultiplier: 1
     packables:
     - {fileID: 102900000, guid: d31683a5f83534713bd6e85d002cec3f, type: 3}
-    totalSpriteSurfaceArea: 16485956
+    totalSpriteSurfaceArea: 18740740
     bindAsDefault: 1
   m_MasterAtlas: {fileID: 0}
   m_PackedSprites:
@@ -67,12 +67,14 @@ SpriteAtlas:
   - {fileID: 21300000, guid: 4b1ff243d3f5e834a968dc3b9f293c96, type: 3}
   - {fileID: 21300000, guid: 6a0ee063bb9b96943b14ca1319329f14, type: 3}
   - {fileID: 21300000, guid: 11901e6311aa0ef4594e3ddf5a0c1473, type: 3}
+  - {fileID: 21300000, guid: af2782a3ee20a46f28dd316b83243898, type: 3}
   - {fileID: 21300000, guid: 5d5738b3e67137447835cd617fdf0c5d, type: 3}
   - {fileID: 21300000, guid: e1fba4f307f36c340a221fdbbefcf3b1, type: 3}
   - {fileID: 21300000, guid: 808d31042286d41428a09e1301188f59, type: 3}
   - {fileID: 21300000, guid: e59c77046ff798c45a8aef849f88d2c4, type: 3}
   - {fileID: 21300000, guid: b02a68345122fd6438ff67aeb007773b, type: 3}
   - {fileID: 21300000, guid: 373b70641e095c9498708258f7992696, type: 3}
+  - {fileID: 21300000, guid: e4ad4464b01ff4d98905c79dd17c1b18, type: 3}
   - {fileID: 21300000, guid: d4495e74a5131c44a88c80bdf941c97b, type: 3}
   - {fileID: 21300000, guid: ce4a6a942e0eedc4ba3b0bf5a5f4d02c, type: 3}
   - {fileID: 21300000, guid: 5263e3c4a85f7c14583e774f945a3c16, type: 3}
@@ -145,6 +147,7 @@ SpriteAtlas:
   - {fileID: 21300000, guid: 7c0ab5dc9ba5c5942a33da0b66713f3c, type: 3}
   - {fileID: 21300000, guid: 349c22fc653178d42a345ec52a418a5e, type: 3}
   - {fileID: 21300000, guid: aa8b99fce2723fd4cb6f58a0440e4878, type: 3}
+  - {fileID: 21300000, guid: 5d94e00d6f2d9429381521024aad4de4, type: 3}
   - {fileID: 21300000, guid: 857ca01d98821bb45b80855b3c20199f, type: 3}
   - {fileID: 21300000, guid: d92da79d0c6a5f349a9161001b9523fb, type: 3}
   - {fileID: 21300000, guid: 5c2a2d9de29853140bfc14d8037d7007, type: 3}
@@ -201,12 +204,14 @@ SpriteAtlas:
   - "Valve\u8C03\u8282\u9600-\u7AD6"
   - "\u76D1\u63A7\u6444\u50CF\u5934_surveillance-cameras-two"
   - data_icon
+  - logo
   - "\u5220\u9664_delete-two"
   - "\u6682\u505C"
   - "\u6DB2\u6C2E\u7F50"
   - "\u767B\u5F55"
   - shouhui
   - "\u5173\u673A_hover"
+  - loading1
   - "\u98CE\u8F66_pinwheel"
   - border_bg01
   - 00
@@ -279,6 +284,7 @@ SpriteAtlas:
   - oxygen
   - "\u6682\u505C_pause-one"
   - "\u5173\u95ED\u63D0\u9192_close-remind"
+  - background
   - "\u5BFC\u51FA_export"
   - "\u952E\u76D8_hover"
   - center02
