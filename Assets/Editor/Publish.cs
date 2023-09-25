@@ -52,28 +52,35 @@ public class Publish
         BuildScript.CopyToStreamingAssets();
     }
     
-    [MenuItem("Tools/11")]
     private static void BuildProduct()
     {
-        string ProductPath = "Product";
+        string outputPath = $"Build/{EditorUserBuildSettings.activeBuildTarget}";
         PlayerSettings.companyName = "YBCK";
-        PlayerSettings.productName = "设备监控";
+        PlayerSettings.productName = "DeviceMonitor"; //切记不能使用中文名字,至少测试在MAC上中文名字问题太多,比如全屏导致崩溃,比如第二次开启卡死的问题
         PlayerSettings.resizableWindow = true;
         PlayerSettings.allowFullscreenSwitch = true;
-        EditorUserBuildSettings.development = false;
-        if (Directory.Exists(ProductPath))
-            Directory.Delete(ProductPath, true);
-        Directory.CreateDirectory(ProductPath);
+        if (Directory.Exists(outputPath))
+            Directory.Delete(outputPath, true);
+        Directory.CreateDirectory(outputPath);
         string[] levels = GetLevelsFromBuildSettings();
-        BuildOptions options = BuildOptions.StrictMode;
-        var result = BuildPipeline.BuildPlayer(levels, $"{ProductPath}/设备监控", EditorUserBuildSettings.activeBuildTarget, options);
+
+        BuildPlayerOptions buildPlayerOptions = new BuildPlayerOptions();
+        buildPlayerOptions.scenes = levels;
+        buildPlayerOptions.locationPathName = Path.Combine(outputPath, PlayerSettings.productName);
+        buildPlayerOptions.target = EditorUserBuildSettings.activeBuildTarget;
+        buildPlayerOptions.options = BuildOptions.StrictMode;
+        
+        var result = BuildPipeline.BuildPlayer(buildPlayerOptions);
         if (result)
+        {
             EditorUtility.DisplayDialog("打包成功", "", "");
+            EditorUtility.RevealInFinder(outputPath);
+        }
         else
             EditorUtility.DisplayDialog("打包失败", "", "");
-
+    
     }
-
+    
     static string[] GetLevelsFromBuildSettings()
     {
         List<string> levels = new List<string>();
