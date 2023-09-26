@@ -72,5 +72,12 @@ namespace VEngine
 
             Debug.LogFormat(format, args);
         }
+
+        public static void D(string msg)
+        {
+            if (!Loggable)
+                return;
+            Debug.Log(msg);
+        }
     }
 }

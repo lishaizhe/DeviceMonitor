@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using GameFramework;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -15,11 +16,21 @@ namespace GameKit.Base
         struct WebRequestParams
         {
             public OnWebRequestCallback calback;
-            //public int requestTimes;
             public int priority;
             public object userdata;
         }
-        
+
+        //设置Header
+        private Dictionary<string, string> headerList = new Dictionary<string, string>(4);
+        public void SetHeader(string key, string value)
+        {
+            headerList[key] = value;
+        }
+        public void ClearHeader()
+        {
+            headerList.Clear();
+        }
+
         public delegate void OnWebRequestCallback(UnityWebRequest request, bool hasErr, object userdata);
 
 #if ODIN_INSPECTOR
@@ -37,13 +48,7 @@ namespace GameKit.Base
         private Dictionary<UnityWebRequest, UnityWebRequestAsyncOperation>.Enumerator enumeratorWorking;
 
         private readonly List<UnityWebRequest> keysToRemove = new List<UnityWebRequest>();
-
-        //有了Instance 为什么要加GetInstance ？ 因为要暴露给lua用
-        public static WebRequestManager GetInstance()
-        {
-            return Instance;
-        }
-
+        
         public void Initialize()
         {
             Initialize(3);
@@ -66,14 +71,6 @@ namespace GameKit.Base
                 Dispose(request);
             }
             m_WorkingRequests.Clear();
-        }
-
-        public bool IsDownloadResult(UnityWebRequest request, string result)
-        {
-            if (string.IsNullOrEmpty(result))
-                return request.downloadedBytes == 0;
-
-            return request.downloadedBytes == (ulong)result.Length && request.downloadHandler.text == result;
         }
 
         public void LoadAssetBundle(string uri, OnWebRequestCallback callback, int priority = 0, int timeout = 0, object userdata = null)
@@ -109,6 +106,16 @@ namespace GameKit.Base
         public void Post(string uri, string postData, OnWebRequestCallback callback, int priority = 0, int timeout = 0, object userdata = null)
         {
             Request(UnityWebRequest.Post(uri, postData), callback, priority, timeout, userdata);
+        }
+
+        public void PostRaw(string uri, string postData, OnWebRequestCallback callback, int priority = 0,
+            int timeout = 0, object userdata = null)
+        {
+            var req = new UnityWebRequest(uri);
+            byte[] bodyRaw = Encoding.UTF8.GetBytes(postData);
+            req.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            req.downloadHandler = (DownloadHandler) new DownloadHandlerBuffer();
+            Request(req, callback, priority, timeout, userdata);
         }
 
         public void Post(string uri, WWWForm formData, OnWebRequestCallback callback, int priority = 0, int timeout = 0, object userdata = null)
@@ -151,6 +158,10 @@ namespace GameKit.Base
             if (request != null)
             {
                 request.timeout = timeout;
+                foreach (var header in headerList)
+                {
+                    request.SetRequestHeader(header.Key, header.Value);
+                }
                 m_WaitingRequests.Add(request);
                 m_ParamsStack.Add(request, new WebRequestParams { calback = callback, priority = priority, userdata = userdata });
                 if (m_WorkingRequests.Count >= maxWorkingWebRequestThread)
@@ -245,9 +256,6 @@ namespace GameKit.Base
                     }
                 }
             }
-
-            //if (m_WorkingRequests.Count > 0)
-                //Debugger.LogFormat("{0} webrequest thread in working!", m_WorkingRequests.Count);
         }
 
         private void Dispose(UnityWebRequest request)
