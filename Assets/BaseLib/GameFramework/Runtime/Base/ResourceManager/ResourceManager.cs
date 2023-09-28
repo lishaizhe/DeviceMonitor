@@ -13,24 +13,7 @@ using UnityGameFramework.Runtime;
 //
 public class ResourceManager
 {
-    private const string package_name_channel = "com.readygo.aps.channel";
-    private const string package_name_gp = "com.readygo.aps.gp";
-    private const string debugDownloadURL_ = "http://10.7.88.21:84/gameservice/get3dfile.php?file=";
-    private const string onlineDownloadURL_ = "https://cdn-aps.readygo.tech/hotupdate/";
-    
-    private const string debugCheckVersionURL_ = "http://10.7.88.21:84/gameservice/getlsu3dversion.php?packageName={0}&platform={1}&appVersion={2}&gm={3}&server={4}&uid={5}&deivceId={6}&returnJson=1";
-    private const string onlineCheckVersionURL_ = "http://gsl-aps.metapoint.club/gameservice/getlsu3dversion.php?packageName={0}&platform={1}&appVersion={2}&gm={3}&server={4}&uid={5}&deivceId={6}&returnJson=1";
-
-    public readonly string GameResManifestName = "gameres";
-    public readonly string DataTableManifestName = "datatable";
-    public readonly string LuaManifestName = "lua";
-
-    private string[] manifests;
-    private string bkgroundManifest;
-    private string packageResManifest;
     private float lastTimePerSecondUpdate;
-    private DownloadUpdateBkground _updateBkground;
-    
     private string DownloadURL
     {
         get { return ""; }
@@ -56,13 +39,7 @@ public class ResourceManager
     private const float CacheTime = 300.0f;
     private Dictionary<string, PreloadCache> preloadCache = new Dictionary<string, PreloadCache>();
     private List<string> keysRemove = new List<string>();
-
-    public bool Loggable
-    {
-        get { return VEngine.Logger.Loggable;}
-        set { VEngine.Logger.Loggable = value; }
-    }
-
+    
     public void Initialize(Action<bool> onComplete)
     {
         var operation = VEngine.Versions.InitializeAsync();
@@ -76,13 +53,7 @@ public class ResourceManager
             onComplete?.Invoke(operation.status == VEngine.OperationStatus.Success);
         };
         
-        manifests = operation.manifests.ToArray();
-        bkgroundManifest = operation.bkgroundManifest;
-        packageResManifest = operation.packageResManifest;
-        
-#if SKIP_UPDATE
-        VEngine.Versions.SkipUpdate = true;
-#endif
+    
         VEngine.Versions.DownloadURL = DownloadURL;
         VEngine.Versions.getDownloadURL = GetDownloadURL;
         
@@ -94,24 +65,7 @@ public class ResourceManager
     {
         var platformPath = VEngine.Versions.PlatformName;
         string package_name = Application.identifier;
-        if (package_name.Equals(package_name_channel))
-            package_name = package_name_gp;
         return $"{DownloadURL}{package_name}/{platformPath}/{filename}";
-    }
-
-    public string[] GetManifestNames()
-    {
-        return manifests;
-    }
-
-    public string GetBkgroundManifestName()
-    {
-        return bkgroundManifest;
-    }
-
-    public string GetPackageResManifestName()
-    {
-        return packageResManifest;
     }
 
     public string GetTempDownloadPath(string file)
@@ -126,43 +80,6 @@ public class ResourceManager
         return ret;
     }
     
-    public void OverrideManifest(VEngine.Manifest manifest)
-    {
-        if (VEngine.Versions.SkipUpdate)
-            return;
-        
-        var from = GetTempDownloadPath(manifest.name);
-        var dest = VEngine.Versions.GetDownloadDataPath(manifest.name);
-        if (File.Exists(from))
-        {
-            Log.Debug("Copy {0} to {1}.", from, dest);
-            File.Copy(from, dest, true);
-        }
-        var versionName = VEngine.Manifest.GetVersionFile(manifest.name);
-        from = GetTempDownloadPath(versionName);
-        if (File.Exists(from))
-        {
-            var path = VEngine.Versions.GetDownloadDataPath(versionName);
-            Log.Debug("Copy {0} to {1}.", from, path);
-            File.Copy(from, path, true);
-        }
-        if (!VEngine.Versions.IsChanged(manifest.name))
-        {
-            return;
-        }
-        manifest.Load(dest);
-        Log.Debug($"Load manifest {dest} {manifest.version}");
-        VEngine.Versions.Override(manifest);
-    }
-    
-    //
-    // 更新所有 Manifest
-    //
-    public VEngine.UpdateVersions UpdateManifests()
-    {
-        return VEngine.Versions.UpdateAsync(manifests);
-    }
-
     //
     // 获取更新文件总大小
     //
@@ -203,42 +120,6 @@ public class ResourceManager
     public VEngine.DownloadVersions DownloadUpdates(List<VEngine.DownloadInfo> downloadInfos)
     {
         return VEngine.Versions.DownloadAsync(downloadInfos.ToArray());
-    }
-
-    public void StartBkgroundDownload(List<string> manifestNames)
-    {
-        var manifests = new List<VEngine.Manifest>();
-        foreach (var n in manifestNames)
-        {
-            var m = VEngine.Versions.GetManifest(n);
-            manifests.Add(m);
-        }
-        var downloadInfos = new List<VEngine.DownloadInfo>();
-        var totalSize = GetDownloadSize(manifests, downloadInfos);
-        if (totalSize > 0)
-        {
-            _updateBkground = new DownloadUpdateBkground {manifests = new List<VEngine.Manifest>(manifests)};
-            _updateBkground.Start(downloadInfos);
-            Log.Debug("start bkground download {0}", totalSize);
-        }
-    }
-    
-    public void BeginWhiteListCheck()
-    {
-        VEngine.Versions.CheckWhiteList = true;
-    }
-
-    public bool EndWhiteListCheck()
-    {
-        VEngine.Versions.CheckWhiteList = false;
-        if (VEngine.Versions.WhiteListFailed.Count > 0)
-        {
-            foreach (var i in VEngine.Versions.WhiteListFailed)
-            {
-                Log.Info("whitelist failed: {0}", i);
-            }
-        }
-        return VEngine.Versions.WhiteListFailed.Count == 0;
     }
 
     public void Clear()
@@ -378,8 +259,6 @@ public class ResourceManager
             UpdatePoolClean();
             UpdatePreloadRelease();
         }
-        
-        _updateBkground?.Update();
     }
 
     private void UpdatePoolClean()
@@ -484,12 +363,6 @@ public class ResourceManager
                 break;
             }
         }
-
-        // if (insCount > 0)
-        // {
-        //     Log.Debug("resource log instance count: {0} use time: {1}", insCount,
-        //         DateTime.Now.TimeOfDay.TotalMilliseconds - time);
-        // }
     }
 
 
@@ -521,79 +394,7 @@ public class ResourceManager
     #endregion
 }
 
-public class InstanceRequest
-{
-    private string prefabPath;
-    private ObjectPool pool;
 
-    public enum State
-    {
-        Init, Loading, Instanced, Destroy
-    }
-
-    public string PrefabPath
-    {
-        get { return prefabPath; }
-    }
-
-    public bool isDone { get; private set; }
-
-    public State state;
-    public GameObject gameObject;
-    public event Action<InstanceRequest> completed;
-
-    public InstanceRequest(string prefabPath)
-    {
-        this.prefabPath = prefabPath;
-        state = State.Init;
-    }
-    
-    public void Instantiate()
-    {
-        pool = GameEntry.Resource.GetObjectPool(prefabPath);
-        state = State.Loading;
-    }
-
-    public void Destroy()
-    {
-        if (gameObject != null)
-        {
-            pool.DeSpawn(gameObject);
-            gameObject = null;
-            pool = null;
-        }
-        
-        state = State.Destroy;
-        completed = null;
-    }
-
-    public bool Update()
-    {
-        if (state == State.Destroy)
-            return false;
-        if (!pool.IsAssetLoaded)
-            return true;
-        try
-        {
-            if (gameObject == null)
-            {
-                gameObject = pool.Spawn();
-                state = State.Instanced;
-                isDone = true;
-            }
-
-            completed?.Invoke(this);
-            completed = null;
-        }
-        catch (Exception ex)
-        {
-            //Log.Error(ex.StackTrace);
-            Log.Error(ex);
-        }
-        
-        return false;
-    }
-}
 
 //
 // UI扩展
@@ -673,64 +474,5 @@ public static class UnityUIExtension
         }
 
         return req;
-    }
-    
-    
-    
-#region ScrollRect
-    public static void SetHorizontalNormalizedPosition(this ScrollRect scrollRect, float ratio)
-    {
-        scrollRect.horizontalNormalizedPosition = ratio;
-    }
-
-    public static float GetHorizontalNormalizedPosition(this ScrollRect scrollRect)
-    {
-        return scrollRect.horizontalNormalizedPosition;
-    }
-
-    #endregion
-    
-}
-
-
-//
-// 后台下载更新
-//
-class DownloadUpdateBkground
-{
-    public List<VEngine.Manifest> manifests;
-
-    private VEngine.DownloadVersions _downloadVersions;
-    
-    public void Start(List<VEngine.DownloadInfo> downloadInfos)
-    {
-        _downloadVersions = VEngine.Versions.DownloadAsync(downloadInfos.ToArray());
-    }
-
-    public void Update()
-    {
-        if (_downloadVersions != null && _downloadVersions.isDone)
-        {
-            if (_downloadVersions.isError)
-            {
-                var downloadInfos = new List<VEngine.DownloadInfo>();
-                var totalSize = GameEntry.Resource.GetDownloadSize(manifests, downloadInfos);
-                if (totalSize > 0)
-                {
-                    Log.Debug("restart bkground download {0}", totalSize);
-                    Start(downloadInfos);
-                }
-                else
-                {
-                    _downloadVersions = null;
-                    Log.Debug("finish bkground download 1");
-                }
-            }
-            else
-            {
-                _downloadVersions = null;
-                Log.Debug("finish bkground download 2");
-            }
-        }
     }
 }
