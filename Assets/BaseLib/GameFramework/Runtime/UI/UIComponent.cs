@@ -186,12 +186,12 @@ namespace UnityGameFramework.Runtime
                 return;
             }
 
-            m_EventComponent = GameEntry.GetComponent<EventComponent>();
-            if (m_EventComponent == null)
-            {
-                Log.Fatal("Event component is invalid.");
-                return;
-            }
+            // m_EventComponent = GameEntry.GetComponent<EventComponent>();
+            // if (m_EventComponent == null)
+            // {
+            //     Log.Fatal("Event component is invalid.");
+            //     return;
+            // }
 
             if (!m_UIManager.IsExistFormHelper())
             {

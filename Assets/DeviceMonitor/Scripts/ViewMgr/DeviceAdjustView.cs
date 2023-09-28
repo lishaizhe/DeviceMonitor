@@ -9,7 +9,7 @@ using UnityGameFramework.Runtime;
 
 public class DeviceAdjustView : MonoBehaviour
 {
-    private MainView m_mainView;
+    private UIMeasureSystem m_mainView;
     private DeviceData m_dInfo;
     private string m_oldKey = ""; //如果是修改的情况下,当名字换掉了,默认是删除之前的,新建一个
 
@@ -32,7 +32,7 @@ public class DeviceAdjustView : MonoBehaviour
     public Text m_txtError;
     private string m_tmpFbxPath;
 
-    public void Init(MainView mainView)
+    public void Init(UIMeasureSystem mainView)
     {
         m_mainView = mainView;
     }

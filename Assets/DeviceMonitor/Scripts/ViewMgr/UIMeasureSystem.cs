@@ -9,7 +9,7 @@ using UnityGameFramework.Runtime;
  */
 
 
-public class MainView : MonoBehaviour
+public class UIMeasureSystem : BaseUIForm
 {
     //渲染模型
     [SerializeField] private ModelShowMono m_showMono;
@@ -48,15 +48,31 @@ public class MainView : MonoBehaviour
     public float C_MinZ { set; get; }
     public float C_MaxZ { set; get; }
 
+    private InstanceRequest m_instanceRequest;
+
     // Start is called before the first frame update
     void Start()
     {
+        //创建3DModel,用来做模型展示
+        m_instanceRequest = GameEntry.Resource.InstantiateAsync(EntityAssets.Model3D);
+        m_instanceRequest.completed += request =>
+        {
+            if (request.isDone)
+            {
+                var obj = request.gameObject;
+                m_showMono = obj.GetComponentInChildren<ModelShowMono>();
+                m_mouseLook = obj.GetComponentInChildren<MouseLook>();
+                m_showMono.SetMainView(this);
+                m_mouseLook.SetMainViewHandler(this);
+            }
+        };
+
         //初始化数据
         DataInterface.GetInst().InitAllDeviceData();
-        m_showMono.SetMainView(this);
+        
         m_editView.Init(this);
         m_editView.gameObject.SetActive(false);
-        m_mouseLook.SetMainViewHandler(this);
+        
         //创建列表
         ToCreateDeviceList(null);
         //创建传感器列表
@@ -209,6 +225,12 @@ public class MainView : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (m_instanceRequest != null)
+        {
+            m_instanceRequest.Destroy();
+            m_instanceRequest = null;
+        }
+
         RemoveListener();
     }
 

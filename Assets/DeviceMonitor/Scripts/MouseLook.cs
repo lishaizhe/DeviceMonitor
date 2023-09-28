@@ -7,9 +7,9 @@ public class MouseLook : MonoBehaviour
 {
     public enum RotationAxes
     {
-        MouseXandY = 0,//Ë®Æ½£¬´¹Ö±
+        MouseXandY = 0,//Ë®Æ½ï¿½ï¿½ï¿½ï¿½Ö±
         MouseX = 1,//Ë®Æ½
-        MouseY = 2//´¹Ö±
+        MouseY = 2//ï¿½ï¿½Ö±
     }
     public RotationAxes axes = RotationAxes.MouseXandY;
     public float sensitivityHor = 9.0f;
@@ -19,16 +19,16 @@ public class MouseLook : MonoBehaviour
     public float maximumVert = 45.0f;
 
     private float _rotationX = 0;
-    private MainView m_mainView;
+    private UIMeasureSystem m_mainView;
 
     private void Start()
     {
-        // ±ÜÃâÎïÀí·ÂÕæÓ°Ïì
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó°ï¿½ï¿½
         Rigidbody rigidbody = GetComponent<Rigidbody>();
         if (rigidbody != null) rigidbody.freezeRotation = true;
     }
 
-    public void SetMainViewHandler(MainView mainView)
+    public void SetMainViewHandler(UIMeasureSystem mainView)
     {
         m_mainView = mainView;
     }
@@ -38,7 +38,7 @@ public class MouseLook : MonoBehaviour
     {
         if (!m_mainView.IsMouseEnable())
             return;
-        //¹öÂÖ·Å´óËõÐ¡
+        //ï¿½ï¿½ï¿½Ö·Å´ï¿½ï¿½ï¿½Ð¡
         Vector2 scrollDelta = Input.mouseScrollDelta;
         if (!scrollDelta.Equals(Vector2.zero))
         {

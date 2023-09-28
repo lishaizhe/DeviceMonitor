@@ -4,9 +4,22 @@ using UnityEngine;
 
 public class EntityAssets
 {
-    public const string CUBE = "Assets/DeviceMonitor/Resource/Prefab/Cube.prefab";
+    //登录界面
     public const string UILoading = "Assets/DeviceMonitor/Resource/Prefab/UILoadingView.prefab";
+    //主界面
     public const string UIMainView = "Assets/DeviceMonitor/Resource/Prefab/UIMainView.prefab";
+    //测温界面
+    public const string UIMeasureSystem = "Assets/DeviceMonitor/Resource/Prefab/UIMeasureSystem.prefab";
+    //测温系统中模型
+    public const string Model3D = "Assets/DeviceMonitor/Resource/Prefab/3DModel.prefab";
+}
+
+
+public enum SubMenuType
+{
+    ZhenKong, 
+    Diwen,
+    Measure,
 }
 
 

@@ -60,7 +60,7 @@ namespace UnityGameFramework.Runtime
             {
                 if(m_event==null)
                 {
-                    m_event = GetComponent<EventComponent>();
+                    m_event = new EventComponent(EventPoolMode.AllowNoHandler | EventPoolMode.AllowMultiHandler);
                 }
                 return m_event;
             }
@@ -257,11 +257,11 @@ namespace UnityGameFramework.Runtime
 
             s_GameFrameworkComponents.AddLast(gameFrameworkComponent);
         }
-             
-        // 判断是否正常游戏逻辑
-        public static bool IsGame()
+
+        public static void Update(float elapseSeconds)
         {
-            return Event != null ? true : false;
+            Resource.Update();
         }
+
     }
 }

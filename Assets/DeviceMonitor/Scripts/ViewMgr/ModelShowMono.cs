@@ -13,9 +13,9 @@ public class ModelShowMono : MonoBehaviour
     private DeviceData m_dInfo;
     private GameObject m_instObj;
     private HeatMapComponent2 m_heatMap;
-    private MainView m_mainView;
+    private UIMeasureSystem m_mainView;
 
-    public void SetMainView(MainView view)
+    public void SetMainView(UIMeasureSystem view)
     {
         m_mainView = view;
     }

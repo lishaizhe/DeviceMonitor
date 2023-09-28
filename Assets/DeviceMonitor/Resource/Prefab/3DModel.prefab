@@ -108,7 +108,6 @@ GameObject:
   m_Component:
   - component: {fileID: 5940368918268318772}
   - component: {fileID: 5940368918268318773}
-  - component: {fileID: 5940368918268318775}
   - component: {fileID: 5940368918268318774}
   m_Layer: 0
   m_Name: Camera
@@ -174,25 +173,6 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!114 &5940368918268318775
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5940368918268318771}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aaea47ceb80e0c446be59e69078c1757, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  scrollSpeed: 1
-  rotateXSpeed: 1
-  rotateYSpeed: 1
-  moveSpeed: 1
-  keyMoveSpeed: 1
-  operate: 1
-  isKeyOperate: 1
 --- !u!65 &5940368918268318774
 BoxCollider:
   m_ObjectHideFlags: 0
