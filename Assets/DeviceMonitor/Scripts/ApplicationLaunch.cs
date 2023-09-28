@@ -15,6 +15,7 @@ public class ApplicationLaunch : MonoBehaviour
     {
         //开启日志输出
         Logger.Loggable = true;
+        var cacheRoot = GameEntry.CacheRoot;
         GameEntry.Resource.Initialize((bool result) =>
         {
             if (result != true)

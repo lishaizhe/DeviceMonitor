@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using TMPro;
 using TriLibCore;
 using UnityEngine;
@@ -32,15 +34,31 @@ public class DeviceAdjustView : MonoBehaviour
     public Text m_txtError;
     private string m_tmpFbxPath;
 
+    private int indexx = 0;
+    
     public void Init(UIMeasureSystem mainView)
     {
         m_mainView = mainView;
+        indexx = 1;
+        Debug.Log($"指针地址: {GetMem(this)}");
+    }
+
+    public string GetMem(object obj)
+    {
+        GCHandle handle = GCHandle.Alloc(obj, GCHandleType.WeakTrackResurrection);
+        IntPtr addr = GCHandle.ToIntPtr(handle);
+        return $"0x{addr.ToString("X")}";
     }
 
     private void OnDisable()
     {
         DestroyAllHotItem();
         m_oldKey = "";
+    }
+
+    private void OnDestroy()
+    {
+        var a = 1;
     }
 
     public void ShowData(string modelKey = "")
@@ -79,7 +97,7 @@ public class DeviceAdjustView : MonoBehaviour
             null,
             OnBeginLoad,
             null,
-            gameObject, //m_mainView.GetShowRoot().gameObject, 
+            gameObject,
             null);
     }
 
@@ -129,10 +147,10 @@ public class DeviceAdjustView : MonoBehaviour
         }
 
         GameObject objRoot = assetLoaderContext.RootGameObject;
-        objRoot.transform.parent = gameObject.transform;
-        objRoot.transform.position = new Vector3(1000, 1000, 1000);
+        // objRoot.transform.parent = gameObject.transform;
+        // objRoot.transform.position = new Vector3(1000, 1000, 1000);
         m_inputModelPath.text = assetLoaderContext.Filename;
-        m_dInfo.modelData = StreamToBytes(assetLoaderContext.Stream);
+        // m_dInfo.modelData = StreamToBytes(assetLoaderContext.Stream);
 #else
         AssetLoaderContextSub contextSub = assetLoaderContext as AssetLoaderContextSub;
 

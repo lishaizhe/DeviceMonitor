@@ -97,7 +97,19 @@ namespace UnityGameFramework.Runtime
                 return settingProxy;
             }
         }
-        
+
+        static private GameObject m_cacheRoot;
+
+        public static GameObject CacheRoot
+        {
+            get
+            {
+                if (m_cacheRoot == null)
+                    m_cacheRoot = new GameObject("CacheRoot");
+                return m_cacheRoot;
+            }
+        }
+
         static private ResourceManager _resourceManager;
         public static ResourceManager Resource
         {
@@ -108,31 +120,6 @@ namespace UnityGameFramework.Runtime
                 return _resourceManager;
             }
         }
-
-
-        // private static TimerComponent Timer_;
-        // public static TimerComponent Timer
-        // {
-        //     get
-        //     {
-        //         if (Timer_ == null)
-        //         {
-        //             Timer_ = GetComponent<TimerComponent>();
-        //         }
-        //         return Timer_;
-        //
-        //     }
-        // }
-        //
-        // static private GlobalDataProxy globalDataProxy;
-        // public static GlobalDataProxy GlobalData
-        // {
-        //     get
-        //     {
-        //
-        //         return GlobalDataProxy.Instance;
-        //     }
-        // }
 
         /// <summary>
         /// 获取游戏框架组件。

@@ -206,10 +206,11 @@ namespace TriLibCore.Samples
         /// </summary>
         public void LoadModelFromFile()
         {
+            var canvasRoot = GameObject.Find("Canvas/MainFrame");
             AssetLoaderOptions.ImportCameras = _loadCamerasToggle.isOn;
             AssetLoaderOptions.ImportLights = _loadLightsToggle.isOn;
             AssetLoaderOptions.LoadPointClouds = _loadPointClouds.isOn;
-            base.LoadModelFromFile();
+            base.LoadModelFromFile(canvasRoot);
         }
 
         /// <summary>
