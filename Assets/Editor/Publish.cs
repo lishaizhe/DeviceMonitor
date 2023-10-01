@@ -58,7 +58,7 @@ public class Publish
         PlayerSettings.companyName = "YBCK";
         PlayerSettings.productName = "DeviceMonitor"; //切记不能使用中文名字,至少测试在MAC上中文名字问题太多,比如全屏导致崩溃,比如第二次开启卡死的问题
         PlayerSettings.resizableWindow = true;
-        PlayerSettings.allowFullscreenSwitch = true;
+        PlayerSettings.allowFullscreenSwitch = false;
         if (Directory.Exists(outputPath))
             Directory.Delete(outputPath, true);
         Directory.CreateDirectory(outputPath);
