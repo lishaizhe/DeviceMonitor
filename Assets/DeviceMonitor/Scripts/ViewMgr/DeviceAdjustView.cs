@@ -123,8 +123,8 @@ public class DeviceAdjustView : MonoBehaviour
     {
         m_txtError.gameObject.SetActive(false);
 
-
-#if UNITY_EDITOR
+        Debug.Log($">>>trilib: onload 1");
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX
         if (assetLoaderContext.RootGameObject == null)
         {
             return;
@@ -136,6 +136,7 @@ public class DeviceAdjustView : MonoBehaviour
         m_inputModelPath.text = assetLoaderContext.Filename;
         m_dInfo.modelData = StreamToBytes(assetLoaderContext.Stream);
 #else
+        Debug.Log($">>>trilib: onload 1");
         AssetLoaderContextSub contextSub = assetLoaderContext as AssetLoaderContextSub;
 
         if (contextSub.RootGameObject == null)
