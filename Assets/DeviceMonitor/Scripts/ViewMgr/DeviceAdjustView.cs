@@ -40,7 +40,7 @@ public class DeviceAdjustView : MonoBehaviour
     {
         m_mainView = mainView;
         indexx = 1;
-        Debug.Log($"指针地址: {GetMem(this)}");
+        Debug.Log($"指针地址: {GetMem(this.gameObject)}");
     }
 
     public string GetMem(object obj)
@@ -90,15 +90,17 @@ public class DeviceAdjustView : MonoBehaviour
     //打开目录设置模型路径
     public void OnClickOpenFolder()
     {
-        var FilePickerAssetLoader = AssetLoaderFilePicker.Create();
-        FilePickerAssetLoader.LoadModelFromFilePickerAsync("IsSelect a File",
-            OnLoad,
-            null,
-            null,
-            OnBeginLoad,
-            null,
-            gameObject,
-            null);
+        var text = m_inputName.text;
+        Debug.Log($">>>>text: {text}");
+        // var FilePickerAssetLoader = AssetLoaderFilePicker.Create();
+        // FilePickerAssetLoader.LoadModelFromFilePickerAsync("IsSelect a File",
+        //     OnLoad,
+        //     null,
+        //     null,
+        //     OnBeginLoad,
+        //     null,
+        //     gameObject,
+        //     null);
     }
 
     private void OnBeginLoad(bool filesSelected)
@@ -138,7 +140,7 @@ public class DeviceAdjustView : MonoBehaviour
     {
         m_txtError.gameObject.SetActive(false);
 
-
+        Debug.Log($"指针地址 - 2: {GetMem(this.gameObject)}");
 
 #if UNITY_EDITOR
         if (assetLoaderContext.RootGameObject == null)

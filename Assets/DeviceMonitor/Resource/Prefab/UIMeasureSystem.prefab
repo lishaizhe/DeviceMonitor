@@ -7908,7 +7908,6 @@ GameObject:
   - component: {fileID: 8935239671533724732}
   - component: {fileID: 8935239671533724733}
   - component: {fileID: 8935239671533724723}
-  - component: {fileID: 8935239671533724722}
   m_Layer: 5
   m_Name: UIMeasureSystem
   m_TagString: Untagged
@@ -7997,21 +7996,6 @@ MonoBehaviour:
   m_objPrefabSensor: {fileID: 2138197734323271128, guid: bf15968b8817c614e902de158bd1547d,
     type: 3}
   m_mouseLook: {fileID: 0}
---- !u!114 &8935239671533724722
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8935239671533724720}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d090355d16614c84b8cdc3b1a1fb5e96, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  AllDevices: []
-  SystemName: "BZ1800\u6D4B\u63A7\u7CFB\u7EDF"
-  PageName: "\u6D4B\u91CF\u7CFB\u7EDF"
 --- !u!1 &8935239671564922136
 GameObject:
   m_ObjectHideFlags: 0
