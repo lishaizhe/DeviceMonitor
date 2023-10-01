@@ -17,48 +17,33 @@ public class DeviceAdjustView : MonoBehaviour
 
     public GameObject m_objPrefabHotPointItem;
     //名称
-    public TMP_InputField m_inputName;
+    public InputField m_inputName;
     // 描述
-    public TMP_InputField m_inputDesc;
+    public InputField m_inputDesc;
     //模型路径
-    public TMP_InputField m_inputModelPath;
+    public InputField m_inputModelPath;
     //节点列表根节点
     public Transform m_transHotPointListRoot;
     //宽 高
-    public TMP_InputField m_inputWidth;
+    public InputField m_inputWidth;
 
-    public TMP_InputField m_inputHeight;
+    public InputField m_inputHeight;
     //节点列表
     private List<HotPointEditItem> m_itemList = new List<HotPointEditItem>();
     //错误提示
     public Text m_txtError;
     private string m_tmpFbxPath;
 
-    private int indexx = 0;
     
     public void Init(UIMeasureSystem mainView)
     {
         m_mainView = mainView;
-        indexx = 1;
-        Debug.Log($"指针地址: {GetMem(this.gameObject)}");
-    }
-
-    public string GetMem(object obj)
-    {
-        GCHandle handle = GCHandle.Alloc(obj, GCHandleType.WeakTrackResurrection);
-        IntPtr addr = GCHandle.ToIntPtr(handle);
-        return $"0x{addr.ToString("X")}";
     }
 
     private void OnDisable()
     {
         DestroyAllHotItem();
         m_oldKey = "";
-    }
-
-    private void OnDestroy()
-    {
-        var a = 1;
     }
 
     public void ShowData(string modelKey = "")
@@ -90,17 +75,15 @@ public class DeviceAdjustView : MonoBehaviour
     //打开目录设置模型路径
     public void OnClickOpenFolder()
     {
-        var text = m_inputName.text;
-        Debug.Log($">>>>text: {text}");
-        // var FilePickerAssetLoader = AssetLoaderFilePicker.Create();
-        // FilePickerAssetLoader.LoadModelFromFilePickerAsync("IsSelect a File",
-        //     OnLoad,
-        //     null,
-        //     null,
-        //     OnBeginLoad,
-        //     null,
-        //     gameObject,
-        //     null);
+        var FilePickerAssetLoader = AssetLoaderFilePicker.Create();
+        FilePickerAssetLoader.LoadModelFromFilePickerAsync("IsSelect a File",
+            OnLoad,
+            null,
+            null,
+            OnBeginLoad,
+            null,
+            gameObject,
+            null);
     }
 
     private void OnBeginLoad(bool filesSelected)
@@ -140,7 +123,6 @@ public class DeviceAdjustView : MonoBehaviour
     {
         m_txtError.gameObject.SetActive(false);
 
-        Debug.Log($"指针地址 - 2: {GetMem(this.gameObject)}");
 
 #if UNITY_EDITOR
         if (assetLoaderContext.RootGameObject == null)
@@ -149,10 +131,10 @@ public class DeviceAdjustView : MonoBehaviour
         }
 
         GameObject objRoot = assetLoaderContext.RootGameObject;
-        // objRoot.transform.parent = gameObject.transform;
-        // objRoot.transform.position = new Vector3(1000, 1000, 1000);
+        objRoot.transform.parent = gameObject.transform;
+        objRoot.transform.position = new Vector3(1000, 1000, 1000);
         m_inputModelPath.text = assetLoaderContext.Filename;
-        // m_dInfo.modelData = StreamToBytes(assetLoaderContext.Stream);
+        m_dInfo.modelData = StreamToBytes(assetLoaderContext.Stream);
 #else
         AssetLoaderContextSub contextSub = assetLoaderContext as AssetLoaderContextSub;
 
@@ -212,19 +194,6 @@ public class DeviceAdjustView : MonoBehaviour
         }
 
         InstantiateHotPointItem();
-        // var rootNode = GetHotPointRoot(obj, "hotpoint");
-        // if (rootNode != null)
-        // {
-        //     int childCnt = rootNode.childCount;
-        //     for (int i = 0; i < childCnt; ++i)
-        //     {
-        // var subObj = rootNode.GetChild(i);
-        // HotPoint _hotPoint = new HotPoint();
-        // _hotPoint.@select = true;
-        // _hotPoint.name = subObj.name;
-        // _hotPoint.sensorName = "CW01";
-        //     }
-        // }
     }
 
     public void InstantiateHotPointItem()
@@ -237,7 +206,6 @@ public class DeviceAdjustView : MonoBehaviour
             var obj = Instantiate(m_objPrefabHotPointItem, m_transHotPointListRoot);
             var editItem = obj.GetComponent<HotPointEditItem>();
             editItem.SetData(m_dInfo.m_hotpointList[i]);
-            // editItem.SetIndex(i);
             m_itemList.Add(editItem);
         }
     }
@@ -249,12 +217,6 @@ public class DeviceAdjustView : MonoBehaviour
             DestroyImmediate(objItem.gameObject);
         }
         m_itemList.Clear();
-    }
-
-    // 刷新挂点
-    public void OnClickBtnRefresh()
-    {
-
     }
 
     // 确认

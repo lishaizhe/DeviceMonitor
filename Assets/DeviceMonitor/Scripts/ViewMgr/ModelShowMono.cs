@@ -60,7 +60,10 @@ public class ModelShowMono : MonoBehaviour
             OnLoad, 
             null, 
             null,
-            null,  
+            error =>
+            {
+                Debug.LogError($">>>error \n {error.GetInnerException().Message}");
+            },  
             null, 
             assetLoaderOptions);
     }

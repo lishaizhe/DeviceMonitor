@@ -35,9 +35,7 @@ namespace UnityGameFramework.Runtime
     /// <summary>
     /// 事件组件。
     /// </summary>
-    [DisallowMultipleComponent]
-    [AddComponentMenu("Game Framework/Event")]
-    public sealed class EventComponent : GameFrameworkComponent
+    public sealed class EventComponent
     {
         public class ObjectPool<T>
         {

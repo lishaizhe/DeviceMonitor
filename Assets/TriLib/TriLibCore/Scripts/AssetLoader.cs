@@ -743,7 +743,6 @@ namespace TriLibCore
         private static void ParseModel(AssetLoaderContext assetLoaderContext, Transform parentTransform, IRootModel rootModel, IModel model, bool isRootGameObject)
         {
             var newGameObject = new GameObject(model.Name);
-            Debug.Log($">>>ParseModel name: {model.Name} - {parentTransform.name}");
             assetLoaderContext.GameObjects.Add(model, newGameObject);
             assetLoaderContext.Models.Add(newGameObject, model);
             newGameObject.transform.parent = parentTransform;
