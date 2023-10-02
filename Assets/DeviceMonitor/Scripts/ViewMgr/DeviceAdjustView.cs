@@ -124,7 +124,7 @@ public class DeviceAdjustView : MonoBehaviour
         m_txtError.gameObject.SetActive(false);
 
         Debug.Log($">>>trilib: onload 1");
-#if UNITY_EDITOR || UNITY_STANDALONE_OSX
+#if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
         if (assetLoaderContext.RootGameObject == null)
         {
             return;
