@@ -9,6 +9,7 @@ public class UIMainView : BaseUIForm
     /// </summary>
     public void OnClickShutdown()
     {
+        Debug.Log($">>>shutdown");
         Application.Quit();
     }
 }
