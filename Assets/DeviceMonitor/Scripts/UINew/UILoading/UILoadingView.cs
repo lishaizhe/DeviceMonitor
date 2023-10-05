@@ -39,7 +39,7 @@ public class UILoadingView : BaseUIForm
         string strPassword = m_textInputUserName.text;
         if (string.IsNullOrEmpty(strUserName) || string.IsNullOrEmpty(strPassword))
         {
-            UIUtil.ShowTips("没有设置名字或者密码");
+            UIUtils.ShowTips("没有设置名字或者密码");
             return;
         }
 
