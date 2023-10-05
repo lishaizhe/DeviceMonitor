@@ -87,6 +87,14 @@ namespace UnityGameFramework.Runtime
             }
         }
 
+        public static TimerManager TimerManager
+        {
+            get
+            {
+                return TimerManager.Instance;
+            }
+        }
+
         static private SettingProxy settingProxy;
         public static SettingProxy Setting
         {
@@ -248,6 +256,7 @@ namespace UnityGameFramework.Runtime
         public static void Update(float elapseSeconds)
         {
             Resource.Update();
+            TimerManager.OnUpdate(Time.deltaTime);
         }
 
     }

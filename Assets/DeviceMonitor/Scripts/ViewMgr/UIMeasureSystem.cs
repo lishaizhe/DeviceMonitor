@@ -275,6 +275,7 @@ public class UIMeasureSystem : BaseUIForm
     //添加设备
     public void OnClickAddBtn()
     {
+        Debug.Log($">>>> OnClickAddBtn");
         m_editView.ShowData();
     }
     

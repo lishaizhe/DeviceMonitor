@@ -420,8 +420,6 @@ namespace VEngine
             var operation = new InitializeVersions
             {
                 manifests = settings.manifests.ToArray(),
-                bkgroundManifest = settings.bkgroundManifest,
-                packageResManifest = settings.packageResManifest
             };
             operation.Start();
             return operation;

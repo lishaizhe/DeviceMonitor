@@ -483,7 +483,12 @@ namespace UnityGameFramework.Runtime
         {
             return OpenUIForm(uiFormAssetName, uiGroupName,  false, null, null,null);
         }
-        
+
+        public int OpenUIDefaultForm(string uiFormAssetName, object userData)
+        {
+            return OpenUIForm(uiFormAssetName, "Default", false, userData, null,null);
+        }
+
 
         /// <summary>
         /// 打开界面。

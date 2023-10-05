@@ -64,17 +64,6 @@ namespace VEngine.Editor
         ///     所有清单，分布式打包的基础配置
         /// </summary>
         [Tooltip("所有清单")] public List<Manifest> manifests = new List<Manifest>();
-
-        /// <summary>
-        ///     此清单中的资源，在登陆时不下载更新，进入游戏在后台下载
-        /// </summary>
-        [Tooltip("后台下载清单")] public Manifest bkgroundManifest;
-        
-                
-        /// <summary>
-        ///     此清单中的资源，随包更新，不热更
-        /// </summary>
-        [Tooltip("不热更的清单")] public Manifest packageResManifest;
         
         /// <summary>
         ///     渠道资源分组配置

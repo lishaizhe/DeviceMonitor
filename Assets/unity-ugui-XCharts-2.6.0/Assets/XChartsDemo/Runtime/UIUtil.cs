@@ -7,11 +7,17 @@
 
 using UnityEngine;
 using UnityEngine.UI;
+using UnityGameFramework.Runtime;
 
 namespace XChartsDemo
 {
     internal static class UIUtil
     {
+
+        public static void ShowTips(string msg)
+        {
+            GameEntry.UI.OpenUIDefaultForm(EntityAssets.UITips, msg);
+        }
 
         public static RectTransform GetRectTransform(Transform transform, string path)
         {

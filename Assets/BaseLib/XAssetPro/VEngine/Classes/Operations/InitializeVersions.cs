@@ -11,8 +11,6 @@ namespace VEngine
         private readonly List<ManifestFile> assets = new List<ManifestFile>();
         private readonly List<string> errors = new List<string>();
         public string[] manifests;
-        public string bkgroundManifest;
-        public string packageResManifest;
 
         public override void Start()
         {

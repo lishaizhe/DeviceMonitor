@@ -27,7 +27,11 @@ public class UISubMenuItem : MonoBehaviour
                 break;
             case SubMenuType.Measure:
             {
-                GameEntry.UI.OpenUIForm(EntityAssets.UIMeasureSystem, "Default");
+                if (!GameEntry.UI.HasUIForm(EntityAssets.UIMeasureSystem))
+                {
+                    GameEntry.Event.Fire(EventId.E_DeActiveNavMenuBtn);
+                    GameEntry.UI.OpenUIForm(EntityAssets.UIMeasureSystem, "Default");
+                }
             }
                 break;
             default:

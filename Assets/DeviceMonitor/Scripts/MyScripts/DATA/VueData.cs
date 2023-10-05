@@ -11,15 +11,14 @@ using UnityEngine.UI;
 
 public class VueData:MonoBehaviour
 {
-#if UNITY_WEBGL && !UNITY_EDITOR
-    [DllImport("__Internal")]
-    public static extern string UnityDataSend(string type, string item);
-    [DllImport("__Internal")]
-    public static extern string UnityDataRecv(string type);
-    [DllImport("__Internal")]
-    public static extern void SetWindowMax(bool isMax);
-
-#endif
+// #if UNITY_WEBGL && !UNITY_EDITOR
+//     [DllImport("__Internal")]
+//     public static extern string UnityDataSend(string type, string item);
+//     [DllImport("__Internal")]
+//     public static extern string UnityDataRecv(string type);
+//     [DllImport("__Internal")]
+//     public static extern void SetWindowMax(bool isMax);
+// #endif
 
     private static string item;
 

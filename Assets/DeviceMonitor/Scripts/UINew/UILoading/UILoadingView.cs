@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityGameFramework.Runtime;
+using XChartsDemo;
 using Logger = VEngine.Logger;
 
 public struct LoadingParam
@@ -16,15 +17,15 @@ public struct LoadingParam
 
 public class UILoadingView : BaseUIForm
 {
-    [SerializeField] private TMP_InputField m_inputUserName;
-    [SerializeField] private TMP_Text m_textInputUserName;
-    [SerializeField] private TMP_InputField m_inputPassword;
+    [SerializeField] private InputField m_inputUserName;
+    [SerializeField] private Text m_textInputUserName;
+    [SerializeField] private InputField m_inputPassword;
+    [SerializeField] private Text m_textInputPassword;
     [SerializeField] private Button m_btnLogin;
     protected internal override void OnOpen(object userData)
     {
         base.OnOpen(userData);
-        LoadingParam param = (LoadingParam)userData;
-        m_textInputUserName.text = "username";
+        // LoadingParam param = (LoadingParam)userData;
     }
 
     protected internal override void OnClose(object userData)
@@ -34,10 +35,18 @@ public class UILoadingView : BaseUIForm
 
     public void OnClickBtn()
     {
+        string strUserName = m_textInputUserName.text;
+        string strPassword = m_textInputUserName.text;
+        if (string.IsNullOrEmpty(strUserName) || string.IsNullOrEmpty(strPassword))
+        {
+            UIUtil.ShowTips("没有设置名字或者密码");
+            return;
+        }
+
         string url = "http://121.40.254.4:9009/displaylogin";
         WWWForm form = new WWWForm();
-        form.AddField("username", "admin");
-        form.AddField("password", "123456");
+        form.AddField("username", strUserName);
+        form.AddField("password", strPassword);
         GameEntry.WebRequest.Post(url, form, (request, err, userdata) =>
         {
             if (request.isDone)

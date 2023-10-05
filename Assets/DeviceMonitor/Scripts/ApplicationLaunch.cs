@@ -25,7 +25,9 @@ public class ApplicationLaunch : MonoBehaviour
             }
             
             Logger.I("初始化成功");
-            GameEntry.UI.OpenUIForm(EntityAssets.UIMainView, "Default");
+            GameEntry.UI.OpenUIForm(EntityAssets.UIBackground, "Default");
+            GameEntry.UI.OpenUIForm(EntityAssets.UINavigationBar, "Top");
+            // GameEntry.UI.OpenUIForm(EntityAssets.UILoading, "Default");
             // GameEntry.Resource.LoadAssetAsync<GameObject>(EntityAssets.CUBE, asset =>
             // {
             //     LoadingParam param = new LoadingParam();

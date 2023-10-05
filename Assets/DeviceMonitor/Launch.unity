@@ -284,6 +284,26 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2047004940039357177, guid: adb3eb1c35fcff14f89fba7b05c9d71c,
+        type: 3}
+      propertyPath: m_UIGroups.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 2047004940039357177, guid: adb3eb1c35fcff14f89fba7b05c9d71c,
+        type: 3}
+      propertyPath: m_UIGroups.Array.data[1].m_Name
+      value: Top
+      objectReference: {fileID: 0}
+    - target: {fileID: 2047004940039357177, guid: adb3eb1c35fcff14f89fba7b05c9d71c,
+        type: 3}
+      propertyPath: m_UIGroups.Array.data[1].sortingLayer
+      value: Default
+      objectReference: {fileID: 0}
+    - target: {fileID: 2047004940039357177, guid: adb3eb1c35fcff14f89fba7b05c9d71c,
+        type: 3}
+      propertyPath: m_UIGroups.Array.data[1].m_Depth
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2161723738774422531, guid: adb3eb1c35fcff14f89fba7b05c9d71c,
         type: 3}
       propertyPath: m_ReferenceResolution.x
