@@ -21,7 +21,7 @@ public class Publish
         //2.开始打bundle
         BuildBundle();
         //3.开始打包
-        BuildProduct();
+        // BuildProduct();
     }
     
     //删除所有已经打过的bundle

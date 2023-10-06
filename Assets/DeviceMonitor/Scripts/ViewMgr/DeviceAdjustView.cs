@@ -49,6 +49,8 @@ public class DeviceAdjustView : MonoBehaviour
     public void ShowData(string modelKey = "")
     {
         this.gameObject.SetActive(true);
+        Debug.Log($">>>>ShowData -- name: {gameObject.name} - active: {gameObject.activeSelf}  - parent: {gameObject.transform.parent.name}"  );
+        
         DestroyAllHotItem();
         m_dInfo = new DeviceData();
         var _tmpDeviceInfo = DataInterface.GetInst().GetDInfoByKey(modelKey);

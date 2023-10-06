@@ -6,7 +6,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityGameFramework.Runtime;
-using XChartsDemo;
 using Logger = VEngine.Logger;
 
 public struct LoadingParam

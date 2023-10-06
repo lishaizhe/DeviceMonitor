@@ -39,8 +39,17 @@ public class ApplicationLaunch : MonoBehaviour
     }
 
     // Update is called once per frame
+    private float m_dt = 0.0f;
     void Update()
     {
         GameEntry.Update(Time.deltaTime);
+        var width = Screen.width;
+        var height = Screen.height;
+        m_dt += Time.deltaTime;
+        if (m_dt > 5.0f)
+        {
+            Debug.Log($">>>size: width: {width}  height: {height}");
+            m_dt = 0.0f;
+        }
     }
 }
