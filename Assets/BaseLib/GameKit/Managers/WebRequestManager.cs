@@ -111,7 +111,7 @@ namespace GameKit.Base
         public void PostRaw(string uri, string postData, OnWebRequestCallback callback, int priority = 0,
             int timeout = 0, object userdata = null)
         {
-            var req = new UnityWebRequest(uri);
+            var req = new UnityWebRequest(uri, "Post");
             byte[] bodyRaw = Encoding.UTF8.GetBytes(postData);
             req.uploadHandler = new UploadHandlerRaw(bodyRaw);
             req.downloadHandler = (DownloadHandler) new DownloadHandlerBuffer();
